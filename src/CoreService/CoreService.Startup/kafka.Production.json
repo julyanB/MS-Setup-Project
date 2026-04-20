@@ -1,0 +1,25 @@
+{
+  "DOmniBus": {
+    "Kafka": {
+      "BootstrapServers": "kafka-bootstrap.kafka.svc.cluster.local:9092",
+      "GroupId": "CoreService-prod",
+
+      "SecurityProtocol": "SaslSsl",
+      "SaslMechanism": "ScramSha512",
+      "SaslUsername": "__REPLACE_FROM_SECRET__",
+      "SaslPassword": "__REPLACE_FROM_SECRET__",
+
+      "MaxConcurrency": 8,
+      "AutoOffsetReset": "Earliest",
+      "SessionTimeoutMs": 45000,
+      "MaxPollIntervalMs": 300000,
+
+      "EnableIdempotence": true,
+      "Acks": "All",
+      "CompressionType": "Zstd",
+
+      "EnableDeadLetterQueue": true,
+      "DeadLetterTopicSuffix": ".dlq"
+    }
+  }
+}

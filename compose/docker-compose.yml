@@ -1,0 +1,133 @@
+name: banking-platform
+
+include:
+  - docker-compose.infra.yml
+
+services:
+  gateway:
+    build:
+      context: ../src/Gateway
+      dockerfile: Dockerfile
+    image: banking-gateway:local
+    container_name: banking-gateway
+    ports:
+      - "${GATEWAY_PORT}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ApplicationSettings__Secret: ${JWT_SECRET}
+      ReverseProxy__Clusters__user-management-cluster__Destinations__user-management-1__Address: http://employee-management:8080/
+      ReverseProxy__Clusters__backend-cluster__Destinations__backend-1__Address: http://core-service:8080/
+      ReverseProxy__Clusters__banking-operations-cluster__Destinations__banking-operations-1__Address: http://banking-operations:8080/
+      Serilog__WriteTo__2__Args__nodeUris: http://elasticsearch:9200
+    depends_on:
+      employee-management:
+        condition: service_started
+      core-service:
+        condition: service_started
+      banking-operations:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - banking-net
+
+  employee-management:
+    build:
+      context: ../src/EmployeeManagementService
+      dockerfile: Dockerfile
+    image: employee-management-service:local
+    container_name: banking-employee-management
+    ports:
+      - "${EMPLOYEE_PORT}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Employee_DB;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
+      ApplicationSettings__Secret: ${JWT_SECRET}
+      DOmniBus__Kafka__BootstrapServers: kafka:9092
+      DOmniBus__Kafka__ClientId: employee-management
+      DOmniBus__Kafka__GroupId: employee-management-service
+      Redis__ConnectionString: redis:6379
+      Features__SignalR: "false"
+      Hangfire__Server__Enabled: "true"
+      ExternalApis__CoreService: http://core-service:8080/
+      ExternalApis__BankingOperations: http://banking-operations:8080/
+      Serilog__WriteTo__2__Args__nodeUris: http://elasticsearch:9200
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - banking-net
+
+  core-service:
+    build:
+      context: ../src/CoreService
+      dockerfile: Dockerfile
+    image: core-service:local
+    container_name: banking-core-service
+    ports:
+      - "${CORE_PORT}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Core_DB;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
+      DOmniBus__Kafka__BootstrapServers: kafka:9092
+      DOmniBus__Kafka__ClientId: core-service
+      DOmniBus__Kafka__GroupId: core-service
+      Redis__ConnectionString: redis:6379
+      Features__SignalR: "true"
+      Hangfire__Server__Enabled: "true"
+      ExternalApis__EmployeeManagement: http://employee-management:8080/
+      ExternalApis__BankingOperations: http://banking-operations:8080/
+      Serilog__WriteTo__2__Args__nodeUris: http://elasticsearch:9200
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - banking-net
+
+  banking-operations:
+    build:
+      context: ../src/BankingOperationsService
+      dockerfile: Dockerfile
+    image: banking-operations-service:local
+    container_name: banking-banking-operations
+    ports:
+      - "${BANKING_PORT}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=BankingOperations_DB;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
+      DOmniBus__Kafka__BootstrapServers: kafka:9092
+      DOmniBus__Kafka__ClientId: banking-operations
+      DOmniBus__Kafka__GroupId: banking-operations-service
+      Redis__ConnectionString: redis:6379
+      Features__SignalR: "false"
+      Hangfire__Server__Enabled: "true"
+      ExternalApis__EmployeeManagement: http://employee-management:8080/
+      ExternalApis__CoreService: http://core-service:8080/
+      Serilog__WriteTo__2__Args__nodeUris: http://elasticsearch:9200
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - banking-net

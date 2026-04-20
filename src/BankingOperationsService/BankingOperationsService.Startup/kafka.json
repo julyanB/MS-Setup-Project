@@ -1,0 +1,31 @@
+{
+  "DOmniBus": {
+    "Kafka": {
+      "BootstrapServers": "localhost:9092",
+      "ClientId": "BankingOperationsService",
+      "GroupId": "BankingOperationsService",
+
+      "SecurityProtocol": "Plaintext",
+      "SaslMechanism": null,
+      "SaslUsername": null,
+      "SaslPassword": null,
+
+      "MaxConcurrency": 1,
+      "AutoOffsetReset": "Earliest",
+      "SessionTimeoutMs": null,
+      "MaxPollIntervalMs": null,
+
+      "EnableIdempotence": true,
+      "Acks": null,
+      "CompressionType": null,
+
+      "EnableDeadLetterQueue": false,
+      "DeadLetterTopicSuffix": ".dlq",
+
+      "Topics": {
+        "OrdersCommands": "orders.commands",
+        "OrdersShipped": "orders.shipped"
+      }
+    }
+  }
+}

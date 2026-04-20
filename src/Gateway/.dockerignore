@@ -1,0 +1,13 @@
+**/bin
+**/obj
+**/out
+**/.vs
+**/.vscode
+**/.idea
+**/*.user
+**/*.suo
+**/.git
+**/.gitignore
+**/.dockerignore
+**/Dockerfile
+**/README.md

@@ -1,0 +1,10 @@
+{
+  "Redis": {
+    "ConnectionString": "redis-master.redis.svc.cluster.local:6379",
+    "Ssl": true,
+    "Password": "__REPLACE_FROM_SECRET__",
+    "AbortOnConnectFail": false,
+    "ConnectRetry": 5,
+    "ConnectTimeout": 10000
+  }
+}

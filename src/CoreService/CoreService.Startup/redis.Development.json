@@ -1,0 +1,7 @@
+{
+  "Redis": {
+    "ConnectionString": "localhost:6379",
+    "Ssl": false,
+    "Password": null
+  }
+}

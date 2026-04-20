@@ -1,0 +1,11 @@
+{
+  "DOmniBus": {
+    "Kafka": {
+      "BootstrapServers": "localhost:9092",
+      "GroupId": "BankingOperationsService-dev",
+      "SecurityProtocol": "Plaintext",
+      "MaxConcurrency": 1,
+      "EnableDeadLetterQueue": false
+    }
+  }
+}

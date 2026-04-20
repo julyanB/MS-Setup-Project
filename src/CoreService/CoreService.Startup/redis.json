@@ -1,0 +1,19 @@
+{
+  "Redis": {
+    "ConnectionString": "localhost:6379",
+    "InstanceName": "CoreService:",
+    "DefaultDatabase": 0,
+    "AbortOnConnectFail": false,
+    "ConnectTimeout": 5000,
+    "SyncTimeout": 5000,
+    "ConnectRetry": 3,
+    "KeepAlive": 60,
+    "Ssl": false,
+    "Password": null,
+    "ChannelPrefix": "CoreService",
+    "SignalR": {
+      "Enabled": true,
+      "ChannelPrefix": "CoreServiceSignalR"
+    }
+  }
+}

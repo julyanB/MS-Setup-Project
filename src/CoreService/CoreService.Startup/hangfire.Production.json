@@ -1,0 +1,21 @@
+{
+  "Hangfire": {
+    "PrepareSchemaIfNecessary": true,
+    "WorkerCount": 20,
+    "Queues": [ "critical", "default" ],
+    "JobExpirationTimeout": "14.00:00:00",
+    "QueuePollInterval": "00:00:15",
+    "CommandTimeout": "00:05:00",
+    "SlidingInvisibilityTimeout": "00:05:00",
+    "DisableGlobalLocks": true,
+    "Server": {
+      "Enabled": true
+    },
+    "Dashboard": {
+      "Enabled": true,
+      "Path": "/hangfire",
+      "AllowAnonymous": false,
+      "AppName": "CoreService"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "DOmniBus": {
+    "Kafka": {
+      "BootstrapServers": "localhost:29092",
+      "GroupId": "CoreService-dev",
+      "SecurityProtocol": "Plaintext",
+      "MaxConcurrency": 1,
+      "EnableDeadLetterQueue": false
+    }
+  }
+}
