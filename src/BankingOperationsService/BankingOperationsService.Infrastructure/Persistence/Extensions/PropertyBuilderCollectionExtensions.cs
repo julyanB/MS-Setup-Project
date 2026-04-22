@@ -1,8 +1,8 @@
-﻿using EmployeeManagementService.Infrastructure.Persistence.Converters;
+﻿using BankingOperationsService.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace EmployeeManagementService.Infrastructure.Persistence.Extensions;
+namespace BankingOperationsService.Infrastructure.Persistence.Extensions;
 
 public static class PropertyBuilderCollectionExtensions
 {

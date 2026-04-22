@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace EmployeeManagementService.Infrastructure.Persistence.Converters;
+namespace BankingOperationsService.Infrastructure.Persistence.Converters;
 
 public sealed class CollectionValueComparer<TItem> : ValueComparer<ICollection<TItem>>
 {

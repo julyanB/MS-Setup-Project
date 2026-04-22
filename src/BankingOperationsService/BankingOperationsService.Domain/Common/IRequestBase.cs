@@ -1,4 +1,4 @@
-﻿namespace EmployeeManagementService.Domain.Common;
+﻿namespace BankingOperationsService.Domain.Common;
 
 public interface IRequestBase<TStatus> : IAuditable
 {
