@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace EmployeeManagementService.Infrastructure.Persistence.Converters;
+namespace CoreService.Infrastructure.Persistence.Converters;
 
 public sealed class CollectionJsonValueConverter<TItem> : ValueConverter<ICollection<TItem>, string>
 {

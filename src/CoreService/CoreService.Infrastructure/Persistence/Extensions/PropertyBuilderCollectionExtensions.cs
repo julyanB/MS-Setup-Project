@@ -1,8 +1,8 @@
-﻿using EmployeeManagementService.Infrastructure.Persistence.Converters;
+﻿using CoreService.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace EmployeeManagementService.Infrastructure.Persistence.Extensions;
+namespace CoreService.Infrastructure.Persistence.Extensions;
 
 public static class PropertyBuilderCollectionExtensions
 {

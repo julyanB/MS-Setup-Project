@@ -1,4 +1,4 @@
-﻿namespace EmployeeManagementService.Domain.Common;
+﻿namespace CoreService.Domain.Common;
 
 public abstract class RequestBase<TId, TStatus> : Auditable<TId>, IRequestBase<TStatus>
     where TId : struct
