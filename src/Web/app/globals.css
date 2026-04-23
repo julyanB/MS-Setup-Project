@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100vh;
+}
+
+body {
+  @apply text-white antialiased;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(224, 64, 251, 0.35), transparent 60%),
+    radial-gradient(900px 500px at -10% 100%, rgba(68, 138, 255, 0.35), transparent 55%),
+    linear-gradient(
+      135deg,
+      #2b1055 0%,
+      #4527a0 25%,
+      #6a3bc2 45%,
+      #7c4dff 60%,
+      #448aff 75%,
+      #1e88e5 90%,
+      #0d47a1 100%
+    );
+  background-attachment: fixed;
+}
+
+@layer components {
+  .display {
+    font-family: var(--font-sora), var(--font-jakarta), system-ui, sans-serif;
+  }
+
+  .gl {
+    @apply border border-white/15 bg-white/[0.08] backdrop-blur-xl;
+  }
+
+  .gls {
+    @apply border border-white/20 bg-white/[0.12] backdrop-blur-2xl;
+  }
+
+  .glx {
+    @apply border border-white/10 bg-white/[0.05] backdrop-blur-lg;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-fuchsia-900/30 transition hover:opacity-90 disabled:opacity-60;
+    background: linear-gradient(135deg, #e040fb, #7c4dff);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/[0.18];
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-white/10 bg-white/[0.06] px-3.5 py-2.5 text-sm text-white placeholder-white/35 outline-none transition focus:border-white/30 focus:bg-white/[0.1];
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/55;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs text-white/70;
+  }
+}
+
+.orb {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb-1 {
+  width: 420px;
+  height: 420px;
+  background: #e040fb;
+  top: -120px;
+  right: -80px;
+  opacity: 0.35;
+}
+
+.orb-2 {
+  width: 360px;
+  height: 360px;
+  background: #448aff;
+  bottom: -120px;
+  left: -100px;
+  opacity: 0.35;
+}
+
+.orb-3 {
+  width: 280px;
+  height: 280px;
+  background: #ff4081;
+  bottom: 10%;
+  right: 18%;
+  opacity: 0.18;
+}

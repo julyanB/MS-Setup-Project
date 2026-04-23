@@ -13,15 +13,18 @@
 
 ```
 compose/
-├── .env                        # passwords & ports (edit before first run)
-├── docker-compose.infra.yml    # Kafka, Redis, SQL Server, Kafka UI, Elasticsearch, Kibana
-└── docker-compose.yml          # all services + infra
+├── .env                           # passwords & ports (edit before first run)
+├── docker-compose.infra.yml       # Kafka, Redis, SQL Server, Kafka UI, Elasticsearch, Kibana
+└── docker-compose.services.yml    # Gateway + EmployeeManagement + CoreService + BankingOperations
 src/
 ├── Gateway/
 ├── EmployeeManagementService/
 ├── CoreService/
-└── BankingOperationsService/
+├── BankingOperationsService/
+└── Web/                           # Next.js frontend (run with `npm run dev`)
 ```
+
+The two compose files are **independent projects** (`banking-infra` and `banking-services`) that share a fixed external Docker network (`banking-net`). Bring them up and down separately — infra first.
 
 ---
 
@@ -46,41 +49,46 @@ JWT_SECRET=dev-only-shared-secret-at-least-32-characters-long
 All commands run from the `compose/` folder:
 
 ```bash
-cd "Local docker setup/compose"
+cd compose
 ```
-
----
 
 ### Option A — Infra only (recommended while developing in Visual Studio)
 
-Starts SQL Server, Kafka, Redis, and Kafka UI. Services run locally from VS.
+Starts SQL Server, Kafka, Redis, Kafka UI, Elasticsearch, and Kibana. Services run locally from VS / `dotnet run`.
 
 ```bash
 docker compose -f docker-compose.infra.yml up -d
 ```
 
----
+### Option B — Full stack (infra + .NET services in Docker)
 
-### Option B — Full stack (everything in Docker)
-
-Builds images from source and starts all services + infra.
+Start infra first, then services. Services reference `banking-net` as an external network, so infra must be up first or the services project will fail to start.
 
 ```bash
-docker compose up -d --build
+# 1. Infra (once, or after a fresh start)
+docker compose -f docker-compose.infra.yml up -d
+
+# 2. Services (build + start)
+docker compose -f docker-compose.services.yml up -d --build
 ```
 
 The `--build` flag rebuilds service images. Drop it on subsequent runs if code hasn't changed:
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.services.yml up -d
 ```
+
+> **Why the split?** Infra is slow-moving (SQL Server, Kafka, ES) and you rarely recycle it. Services are fast-moving — you rebuild them constantly. Keeping them in separate compose projects means `docker compose -f docker-compose.services.yml down` tears down only the app containers, leaving your databases, Kafka topics, and ES indices untouched.
 
 ---
 
 ## Verifying Everything is Running
 
+Each project has its own `docker compose ps`:
+
 ```bash
-docker compose ps
+docker compose -f docker-compose.infra.yml ps
+docker compose -f docker-compose.services.yml ps
 ```
 
 All containers should show `healthy` or `running`:
@@ -99,7 +107,7 @@ banking-core-service        running
 banking-banking-operations  running
 ```
 
-If something shows `starting`, wait 20–30 seconds and run `docker compose ps` again — SQL Server and Kafka take time on first boot.
+If something shows `starting`, wait 20–30 seconds and check again — SQL Server and Kafka take time on first boot.
 
 ---
 
@@ -130,15 +138,17 @@ Each service exposes Swagger in Development:
 ## Viewing Logs
 
 ```bash
-# All services
-docker compose logs -f
+# Infra
+docker compose -f docker-compose.infra.yml logs -f
+docker compose -f docker-compose.infra.yml logs -f kafka
+docker compose -f docker-compose.infra.yml logs -f sqlserver
 
-# One service
-docker compose logs -f employee-management
-docker compose logs -f core-service
-docker compose logs -f banking-operations
-docker compose logs -f gateway
-docker compose logs -f kafka
+# Services
+docker compose -f docker-compose.services.yml logs -f
+docker compose -f docker-compose.services.yml logs -f gateway
+docker compose -f docker-compose.services.yml logs -f employee-management
+docker compose -f docker-compose.services.yml logs -f core-service
+docker compose -f docker-compose.services.yml logs -f banking-operations
 ```
 
 ---
@@ -146,23 +156,41 @@ docker compose logs -f kafka
 ## Stopping the Stack
 
 ```bash
-# Stop containers but keep data volumes
-docker compose down
+# Stop only services (keep infra + data running)
+docker compose -f docker-compose.services.yml down
 
-# Stop and delete all data (fresh start)
-docker compose down -v
+# Stop only infra (keep containers — but services will break if their deps are gone)
+docker compose -f docker-compose.infra.yml down
+
+# Full teardown (services first, then infra)
+docker compose -f docker-compose.services.yml down
+docker compose -f docker-compose.infra.yml down
+
+# Full teardown + delete all data (fresh start)
+docker compose -f docker-compose.services.yml down
+docker compose -f docker-compose.infra.yml down -v
 ```
+
+> Always stop services before infra — services depend on `banking-net`, which is owned by the infra project.
 
 ---
 
 ## Common Issues
 
-### SQL Server takes too long to start
+### Services fail with "network banking-net not found"
 
-The services depend on SQL Server being healthy before they boot. If a service exits with a connection error, it just needs more time. Run:
+Infra isn't running. Start it first:
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.infra.yml up -d
+```
+
+### SQL Server takes too long to start
+
+If a service exits with a connection error on first boot, it just needs more time. Re-run:
+
+```bash
+docker compose -f docker-compose.services.yml up -d
 ```
 
 Docker will restart any containers that exited while waiting.
@@ -175,17 +203,22 @@ Edit `compose/.env` and change the conflicting port, e.g.:
 GATEWAY_PORT=5010
 ```
 
-Then restart: `docker compose down && docker compose up -d`
+Then restart:
+
+```bash
+docker compose -f docker-compose.services.yml down
+docker compose -f docker-compose.services.yml up -d
+```
 
 ### Service shows as unhealthy
 
 Check logs for that service:
 
 ```bash
-docker compose logs employee-management
+docker compose -f docker-compose.services.yml logs employee-management
 ```
 
-Most common cause: EF Core migration failed because SQL Server wasn't ready yet. Running `docker compose up -d` again will restart the service and retry.
+Most common cause: EF Core migration failed because SQL Server wasn't ready yet. Re-running `up -d` restarts the service and retries.
 
 ### Kafka UI can't connect
 
@@ -195,13 +228,13 @@ Kafka UI depends on Kafka being healthy. Give it 30–60 seconds after Kafka sta
 
 ## Rebuilding a Single Service
 
-When you change code in one service, rebuild just that one instead of the whole stack:
+When you change code in one service, rebuild just that one:
 
 ```bash
-docker compose up -d --build employee-management
-docker compose up -d --build core-service
-docker compose up -d --build banking-operations
-docker compose up -d --build gateway
+docker compose -f docker-compose.services.yml up -d --build gateway
+docker compose -f docker-compose.services.yml up -d --build employee-management
+docker compose -f docker-compose.services.yml up -d --build core-service
+docker compose -f docker-compose.services.yml up -d --build banking-operations
 ```
 
 ---
@@ -236,7 +269,7 @@ Kafka UI at http://localhost:8080 lets you browse topics, inspect messages, chec
 
 All services ship logs to Elasticsearch via the Serilog Elasticsearch sink (ECS-formatted).
 
-- Inside Docker: services write to `http://elasticsearch:9200` (overridden via `Serilog__WriteTo__2__Args__nodeUris` in `docker-compose.yml`).
+- Inside Docker: services write to `http://elasticsearch:9200` (overridden via `Serilog__WriteTo__2__Args__nodeUris` in `docker-compose.services.yml`).
 - From Visual Studio / host: services write to `http://localhost:9200` (the value in `appsettings.json`).
 
 ### Index patterns per service
@@ -262,25 +295,31 @@ All services ship logs to Elasticsearch via the Serilog Elasticsearch sink (ECS-
 ## Quick Reference
 
 ```bash
-# Start infra only
+# Infra only (VS/local services)
 docker compose -f docker-compose.infra.yml up -d
 
-# Start everything (build images)
-docker compose up -d --build
+# Everything (infra + services, build images)
+docker compose -f docker-compose.infra.yml up -d
+docker compose -f docker-compose.services.yml up -d --build
 
-# Check status
-docker compose ps
+# Status
+docker compose -f docker-compose.infra.yml ps
+docker compose -f docker-compose.services.yml ps
 
 # Follow logs
-docker compose logs -f
+docker compose -f docker-compose.services.yml logs -f gateway
 
-# Stop (keep data)
-docker compose down
+# Stop services, keep infra + data
+docker compose -f docker-compose.services.yml down
 
-# Stop (delete data — fresh start)
-docker compose down -v
+# Full teardown, keep data
+docker compose -f docker-compose.services.yml down
+docker compose -f docker-compose.infra.yml down
+
+# Full teardown + wipe data
+docker compose -f docker-compose.services.yml down
+docker compose -f docker-compose.infra.yml down -v
 
 # Rebuild one service
-docker compose up -d --build employee-management
-docker compose up -d --build banking-operations
+docker compose -f docker-compose.services.yml up -d --build employee-management
 ```

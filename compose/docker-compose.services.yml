@@ -1,7 +1,9 @@
-name: banking-platform
+name: banking-services
 
-include:
-  - docker-compose.infra.yml
+networks:
+  banking-net:
+    name: banking-net
+    external: true
 
 services:
   gateway:
@@ -27,8 +29,6 @@ services:
         condition: service_started
       banking-operations:
         condition: service_started
-      elasticsearch:
-        condition: service_healthy
     networks:
       - banking-net
 
@@ -54,15 +54,6 @@ services:
       ExternalApis__CoreService: http://core-service:8080/
       ExternalApis__BankingOperations: http://banking-operations:8080/
       Serilog__WriteTo__2__Args__nodeUris: http://elasticsearch:9200
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
     networks:
       - banking-net
 
@@ -87,15 +78,6 @@ services:
       ExternalApis__EmployeeManagement: http://employee-management:8080/
       ExternalApis__BankingOperations: http://banking-operations:8080/
       Serilog__WriteTo__2__Args__nodeUris: http://elasticsearch:9200
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
     networks:
       - banking-net
 
@@ -120,14 +102,5 @@ services:
       ExternalApis__EmployeeManagement: http://employee-management:8080/
       ExternalApis__CoreService: http://core-service:8080/
       Serilog__WriteTo__2__Args__nodeUris: http://elasticsearch:9200
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
     networks:
       - banking-net

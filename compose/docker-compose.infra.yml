@@ -2,6 +2,7 @@ name: banking-infra
 
 networks:
   banking-net:
+    name: banking-net
     driver: bridge
 
 volumes:

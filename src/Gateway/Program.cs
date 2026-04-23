@@ -133,6 +133,6 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/ready");
 
-app.MapReverseProxy();
+app.MapReverseProxy().RequireCors();
 
 app.Run();
