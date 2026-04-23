@@ -36,7 +36,7 @@ export default function RootLayout({
         <Providers>
           <div className="relative z-10 min-h-screen">
             <SiteHeader />
-            <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+            <main className="mx-auto max-w-7xl px-6 py-10">{children}</main>
           </div>
         </Providers>
       </body>

@@ -1,7 +1,29 @@
 "use client";
 
+import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useUser } from "@/contexts/UserContext";
+
+const mostUsedRequests = [
+  { title: "Board proposal request", code: "MB", href: "/requests?type=board" },
+];
+
+const quickActions = [
+  "Make a payment",
+  "Open a deposit",
+  "Create account",
+  "Register new customer",
+  "Make cash deposit",
+  "Exchange currency",
+  "Request a debit card",
+  "Conflict of interests",
+];
+
+const requestQueues = [
+  { label: "RoleRequest", count: 6839, href: "/requests?tab=role" },
+  { label: "My Request", count: 192, href: "/requests?tab=mine" },
+  { label: "AllRequest", count: 358093, href: "/requests?tab=all" },
+];
 
 export default function DashboardPage() {
   return (
@@ -13,77 +35,127 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const { user } = useUser();
+
   if (!user) return null;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-white/45">
-            Account
-          </p>
-          <h1 className="display mt-2 text-3xl font-bold">Dashboard</h1>
-          <p className="mt-1 text-sm text-white/55">
-            Decoded directly from your JWT.
-          </p>
-        </div>
-        <span className="chip border-emerald-300/30 bg-emerald-400/10 text-emerald-200">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-          Authenticated
-        </span>
-      </header>
+    <div className="space-y-8">
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-5">
+          <div className="gls rounded-2xl p-4">
+            <label className="label">Search</label>
+            <div className="flex gap-2">
+              <input
+                className="field"
+                placeholder="UCN, mobile number, customer code, request number"
+              />
+              <Link href="/requests" className="btn-primary px-4">
+                Search
+              </Link>
+            </div>
+          </div>
 
-      <section className="gl rounded-2xl p-6">
-        <h2 className="label">Identity</h2>
-        <dl className="mt-3 grid gap-y-2 text-sm sm:grid-cols-[140px_1fr]">
-          <dt className="text-white/45">User id</dt>
-          <dd className="font-mono text-xs text-white/90 sm:text-sm">
-            {user.id ?? "—"}
-          </dd>
-          <dt className="text-white/45">Email</dt>
-          <dd className="text-white/90">{user.email ?? "—"}</dd>
-        </dl>
+          <section>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="display text-lg font-semibold">
+                Most used requests
+              </h2>
+              <Link
+                href="/requests"
+                className="text-sm font-semibold text-white/65 underline decoration-white/25 underline-offset-4 hover:text-white"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {mostUsedRequests.map((request) => (
+                <Link
+                  key={request.title}
+                  href={request.href}
+                  className="gl rounded-2xl p-4 transition hover:-translate-y-0.5 hover:bg-white/[0.14]"
+                >
+                  <span className="chip mb-4 border-white/15 text-white/70">
+                    {request.code}
+                  </span>
+                  <span className="display block text-sm font-semibold">
+                    {request.title}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="display mb-3 text-lg font-semibold">
+              Quick actions
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {quickActions.map((action) => (
+                <button
+                  key={action}
+                  type="button"
+                  className="gl flex items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-white/[0.14]"
+                >
+                  {action}
+                  <span className="text-white/35">›</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <aside className="space-y-5">
+          <section className="gls rounded-2xl p-5">
+            <h2 className="display text-lg font-semibold">Office targets</h2>
+            <div className="mt-5 grid grid-cols-2 gap-4">
+              <TargetDial label="Daily flow" value={65} />
+              <TargetDial label="SLA" value={91} />
+            </div>
+            <p className="mt-4 text-right text-xs text-white/45">
+              Current to: 24.04.2026
+            </p>
+          </section>
+
+          <section className="gls rounded-2xl p-5">
+            <h2 className="display text-lg font-semibold">Request queues</h2>
+            <div className="mt-4 space-y-3">
+              {requestQueues.map((queue) => (
+                <Link
+                  key={queue.label}
+                  href={queue.href}
+                  className="gl flex items-center justify-between rounded-2xl p-4 transition hover:bg-white/[0.14]"
+                >
+                  <span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-white/45">
+                      {queue.label}
+                    </span>
+                    <span className="mt-1 block text-sm text-white/50">
+                      Open paginated list
+                    </span>
+                  </span>
+                  <span className="display text-2xl font-bold">
+                    {queue.count.toLocaleString()}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </aside>
       </section>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="gl rounded-2xl p-6">
-          <h2 className="label">Roles</h2>
-          {user.roles.length === 0 ? (
-            <p className="mt-2 text-sm text-white/45">No roles assigned.</p>
-          ) : (
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {user.roles.map((r) => (
-                <li
-                  key={r}
-                  className="chip border-sky-300/30 bg-sky-400/10 text-sky-100"
-                >
-                  {r}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+    </div>
+  );
+}
 
-        <section className="gl rounded-2xl p-6">
-          <h2 className="label">Permissions</h2>
-          {user.permissions.length === 0 ? (
-            <p className="mt-2 text-sm text-white/45">
-              No permissions on this token.
-            </p>
-          ) : (
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {user.permissions.map((p) => (
-                <li
-                  key={p}
-                  className="chip border-fuchsia-300/30 bg-fuchsia-400/10 text-fuchsia-100"
-                >
-                  {p}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+function TargetDial({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-4">
+      <div className="mx-auto grid h-24 w-24 place-items-center rounded-full border-[10px] border-white/15 border-r-fuchsia-300 border-t-orange-300">
+        <span className="display text-lg font-bold">{value}%</span>
       </div>
+      <p className="mt-3 text-center text-xs font-semibold text-white/55">
+        {label}
+      </p>
     </div>
   );
 }

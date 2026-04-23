@@ -42,11 +42,11 @@ export default function LoginPage() {
     <div className="mx-auto max-w-md">
       <div className="gls rounded-3xl p-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-white/45">
-          Welcome back
+          Digi workspace
         </p>
-        <h1 className="display mt-2 text-2xl font-bold">Sign in</h1>
+        <h1 className="display mt-2 text-2xl font-bold">Sign in to Digi</h1>
         <p className="mt-1 text-sm text-white/55">
-          Authenticate with the gateway to continue.
+          Authenticate with your employee account.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">

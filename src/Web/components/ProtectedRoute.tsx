@@ -14,11 +14,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     }
   }, [status, router]);
 
-  if (status !== "authenticated") {
-    return (
-      <div className="py-10 text-sm text-slate-500">Checking session…</div>
-    );
-  }
+  if (status !== "authenticated") return null;
 
   return <>{children}</>;
 }
