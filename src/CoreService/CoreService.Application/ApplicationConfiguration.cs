@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using CoreService.Domain.Enums;
 using CoreService.Application.MessageHandler.RequestMetaDataSubsciber.Create;
 using CoreService.Application.MessageHandler.RequestMetaDataSubsciber.Update;
+using CoreService.Application.Features.RequestMetaData.MarkRequestMetaDataSeen;
 
 namespace CoreService.Application;
 
@@ -19,6 +20,7 @@ public static class ApplicationConfiguration
             .Configure<DOmniBusSettings>(
                 configuration.GetSection(DOmniBusSettings.SectionName))
             .AddMessaging(configuration)
+            .AddHandlers()
             .AddValidatorsFromAssemblyContaining(typeof(ApplicationConfiguration));
 
     private static IServiceCollection AddMessaging(
@@ -44,6 +46,13 @@ public static class ApplicationConfiguration
         });
 
         return services;
+    }
+
+    private static IServiceCollection AddHandlers(
+        this IServiceCollection services)
+    {
+        return services
+            .AddTransient<MarkRequestMetaDataSeenRequestHandler>();
     }
 
     private static void SetKafkaSettings(DOmniBusLiteOptions bus, KafkaSettings kafka)

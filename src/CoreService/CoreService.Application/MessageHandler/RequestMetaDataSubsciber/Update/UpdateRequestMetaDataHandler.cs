@@ -21,6 +21,7 @@ public class UpdateRequestMetaDataHandler : IEventHandler<UpdateRequestMetaDataE
                 .SetProperty(p => p.CreatedBy, p => @event.CreatedBy ?? p.CreatedBy)
                 .SetProperty(p => p.ModifiedBy, p => @event.ModifiedBy ?? p.ModifiedBy)
                 .SetProperty(p => p.UpdatedAt, p => @event.UpdatedAt ?? p.UpdatedAt)
+                .SetProperty(p => p.Seen, p => false)
                 .SetProperty(p => p.AdditionalJsonData, p => @event.AdditionalJsonData ?? p.AdditionalJsonData)
             , cancellationToken);
     }

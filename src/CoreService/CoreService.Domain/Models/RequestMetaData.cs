@@ -12,5 +12,7 @@ public class RequestMetaData : Entity<int>
     public required DateTimeOffset CreatedAt { get; set; }
     public required DateTimeOffset UpdatedAt { get; set; }
 
+    public bool Seen { get; set; }
+
     public string? AdditionalJsonData { get; set; }
 }

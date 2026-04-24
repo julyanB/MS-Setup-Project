@@ -35,6 +35,10 @@ public class RequestMetaDataConfiguration : IEntityTypeConfiguration<RequestMeta
         builder.Property(x => x.UpdatedAt)
             .IsRequired();
 
+        builder.Property(x => x.Seen)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(x => x.AdditionalJsonData)
             .IsRequired(false);
     }

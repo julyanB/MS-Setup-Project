@@ -4,6 +4,7 @@ using CoreService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoreService.Infrastructure.Migrations
 {
     [DbContext(typeof(CoreServiceDbContext))]
-    partial class CoreServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424095235_AlterRequestDataAddColumnSeen")]
+    partial class AlterRequestDataAddColumnSeen
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

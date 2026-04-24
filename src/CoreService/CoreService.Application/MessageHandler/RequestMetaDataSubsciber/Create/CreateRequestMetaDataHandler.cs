@@ -24,6 +24,7 @@ public class CreateRequestMetaDataHandler : IEventHandler<CreateRequestMetaDataE
             ModifiedBy = @event.ModifiedBy,
             UpdatedAt = @event.UpdatedAt,
             CreatedAt = @event.CreatedAt,
+            Seen = false,
             AdditionalJsonData = @event.AdditionalJsonData
         };
 
