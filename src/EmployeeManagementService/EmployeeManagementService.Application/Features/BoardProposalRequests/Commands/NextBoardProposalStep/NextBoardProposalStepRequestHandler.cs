@@ -1,7 +1,10 @@
 ﻿using DOmniBus.Lite;
+using EmployeeManagementService.Application.Common;
 using EmployeeManagementService.Application.Contracts;
 using EmployeeManagementService.Application.Exceptions;
 using EmployeeManagementService.Application.MessageEmitters.RequestMetaDataEmitter.Update;
+using EmployeeManagementService.Application.Services.RequestApprovalAssignment;
+using EmployeeManagementService.Domain.Constants;
 using EmployeeManagementService.Domain.Enums;
 using EmployeeManagementService.Domain.Enums.BoardProposal;
 using EmployeeManagementService.Domain.Models;
@@ -18,17 +21,20 @@ public class NextBoardProposalStepRequestHandler
     private readonly IValidator<NextBoardProposalStepRequest> _validator;
     private readonly IMessageBus _bus;
     private readonly ICurrentUser _currentUser;
+    private readonly IRequestApprovalAssignmentService _approvalAssignmentService;
 
     public NextBoardProposalStepRequestHandler(
         IEmployeeManagementServiceDbContext dbContext,
         IValidator<NextBoardProposalStepRequest> validator,
         IMessageBus bus,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IRequestApprovalAssignmentService approvalAssignmentService)
     {
         _dbContext = dbContext;
         _validator = validator;
         _bus = bus;
         _currentUser = currentUser;
+        _approvalAssignmentService = approvalAssignmentService;
     }
 
     public async Task Handle(
@@ -84,6 +90,12 @@ public class NextBoardProposalStepRequestHandler
         requestEntity.Status = stateMachine.CurrentState;
         ApplyTransitionTimestamps(requestEntity, stateMachine.CurrentState);
 
+        var approvalAssignments = await _approvalAssignmentService.SetActiveApprovalAssignments(
+            requestEntity.Id,
+            nameof(BoardProposalRequest),
+            GetApprovalTargetsForStatus(stateMachine.CurrentState),
+            cancellationToken);
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         var actor = _currentUser.Email ?? _currentUser.UserId ?? "system";
@@ -96,6 +108,7 @@ public class NextBoardProposalStepRequestHandler
                 Status = requestEntity.Status.ToString(),
                 ModifiedBy = actor,
                 UpdatedAt = DateTimeOffset.UtcNow,
+                ApprovalTargets = ApprovalTargetMessageFactory.FromAssignments(approvalAssignments)
             },
             cancellationToken);
     }
@@ -202,6 +215,27 @@ public class NextBoardProposalStepRequestHandler
                 break;
         }
     }
+
+    private static IReadOnlyCollection<RequestApprovalTarget> GetApprovalTargetsForStatus(
+        BoardProposalStatus status)
+        => status switch
+        {
+            BoardProposalStatus.SecretaryReview =>
+            [
+                new RequestApprovalTarget(
+                    RequestApprovalTargetType.Role,
+                    Roles.BoardProposal_SecretaryAdmin,
+                    "Secretary review")
+            ],
+            BoardProposalStatus.ChairpersonReview =>
+            [
+                new RequestApprovalTarget(
+                    RequestApprovalTargetType.Role,
+                    Roles.BoardProposal_BoardMember,
+                    "Chairperson review")
+            ],
+            _ => []
+        };
 
     private static void ValidateTransitionRequirements(
         BoardProposalRequest requestEntity,
@@ -389,5 +423,4 @@ public class NextBoardProposalStepRequestHandler
         => attachments.Any(attachment =>
             string.Equals(attachment.Section, "AgendaItem", StringComparison.OrdinalIgnoreCase)
             && attachment.SectionEntityId == agendaItem.Id);
-
 }

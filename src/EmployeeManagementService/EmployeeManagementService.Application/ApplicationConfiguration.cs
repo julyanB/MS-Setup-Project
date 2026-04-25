@@ -21,6 +21,7 @@ using EmployeeManagementService.Application.Features.BoardProposalRequests.Comma
 using EmployeeManagementService.Application.Features.Attachments.Commands.DeactivateAttachment;
 using EmployeeManagementService.Application.Features.Attachments.Commands.UploadAttachment;
 using EmployeeManagementService.Application.Features.Attachments.Queries.DownloadAttachment;
+using EmployeeManagementService.Application.Services.RequestApprovalAssignment;
 
 namespace EmployeeManagementService.Application;
 
@@ -49,8 +50,14 @@ public static class ApplicationConfiguration
             .AddTransient<UploadAttachmentRequestHandler>()
             .AddTransient<DownloadAttachmentRequestHandler>()
             .AddTransient<DeactivateAttachmentRequestHandler>()
+            .AddServices()
             .AddMessaging(configuration)
             .AddValidatorsFromAssemblyContaining<ApplicationSettings>();
+
+    public static IServiceCollection AddServices(
+        this IServiceCollection services)
+        => services
+            .AddTransient<IRequestApprovalAssignmentService, RequestApprovalAssignmentService>();
 
     private static IServiceCollection AddMessaging(
         this IServiceCollection services,

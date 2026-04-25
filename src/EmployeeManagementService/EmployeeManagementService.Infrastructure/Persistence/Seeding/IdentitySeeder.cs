@@ -1,7 +1,7 @@
-﻿using EmployeeManagementService.Domain.Models;
+﻿using EmployeeManagementService.Domain.Constants;
+using EmployeeManagementService.Domain.Models;
 using EmployeeManagementService.Infrastructure.Identity.Authorization;
 using EmployeeManagementService.Infrastructure.Identity.UserData;
-using EmployeeManagementService.Infrastructure.Persistence.Seeding.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +29,7 @@ public static class IdentitySeeder
     }
 
     private static IEnumerable<string> GetAllRoles()
-        => new[] { "Admin" }.Concat(SeedRoles.All);
+        => new[] { "Admin" }.Concat(Roles.All);
 
     private static async Task EnsureRole(RoleManager<IdentityRole> roleManager, string roleName)
     {
@@ -48,16 +48,16 @@ public static class IdentitySeeder
     {
         var seededPermissions = new[]
         {
-            Permission(SeedPermissions.BoardProposal_Read, "Read board proposal requests and materials"),
-            Permission(SeedPermissions.BoardProposal_CreateMeeting, "Create board proposal meetings"),
-            Permission(SeedPermissions.BoardProposal_AddAgendaItems, "Add agenda items to board proposal requests"),
-            Permission(SeedPermissions.BoardProposal_UploadMaterials, "Upload board proposal materials"),
-            Permission(SeedPermissions.BoardProposal_SendAgenda, "Send board proposal agenda packages"),
-            Permission(SeedPermissions.BoardProposal_WorkflowNextStep, "Move board proposal requests through workflow statuses"),
-            Permission(SeedPermissions.BoardProposal_RegisterDecisions, "Register board proposal decisions and votes"),
-            Permission(SeedPermissions.BoardProposal_CreateTasks, "Create board proposal tasks"),
-            Permission(SeedPermissions.BoardProposal_ViewTasks, "View board proposal tasks"),
-            Permission(SeedPermissions.BoardProposal_UpdateTaskStatus, "Update board proposal task statuses")
+            Permission(Permissions.BoardProposal_Read, "Read board proposal requests and materials"),
+            Permission(Permissions.BoardProposal_CreateMeeting, "Create board proposal meetings"),
+            Permission(Permissions.BoardProposal_AddAgendaItems, "Add agenda items to board proposal requests"),
+            Permission(Permissions.BoardProposal_UploadMaterials, "Upload board proposal materials"),
+            Permission(Permissions.BoardProposal_SendAgenda, "Send board proposal agenda packages"),
+            Permission(Permissions.BoardProposal_WorkflowNextStep, "Move board proposal requests through workflow statuses"),
+            Permission(Permissions.BoardProposal_RegisterDecisions, "Register board proposal decisions and votes"),
+            Permission(Permissions.BoardProposal_CreateTasks, "Create board proposal tasks"),
+            Permission(Permissions.BoardProposal_ViewTasks, "View board proposal tasks"),
+            Permission(Permissions.BoardProposal_UpdateTaskStatus, "Update board proposal task statuses")
         };
 
         var names = seededPermissions.Select(x => x.Name).ToArray();
@@ -89,29 +89,29 @@ public static class IdentitySeeder
     {
         var rolePermissions = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Admin"] = [PermissionClaims.RolesManage, .. SeedPermissions.All],
-            [SeedRoles.BoardProposal_SecretaryAdmin] = SeedPermissions.All,
-            [SeedRoles.BoardProposal_BoardMember] =
+            ["Admin"] = [PermissionClaims.RolesManage, .. Permissions.All],
+            [Roles.BoardProposal_SecretaryAdmin] = Permissions.All,
+            [Roles.BoardProposal_BoardMember] =
             [
-                SeedPermissions.BoardProposal_Read,
-                SeedPermissions.BoardProposal_ViewTasks
+                Permissions.BoardProposal_Read,
+                Permissions.BoardProposal_ViewTasks
             ],
-            [SeedRoles.BoardProposal_TaskOwner] =
+            [Roles.BoardProposal_TaskOwner] =
             [
-                SeedPermissions.BoardProposal_Read,
-                SeedPermissions.BoardProposal_ViewTasks,
-                SeedPermissions.BoardProposal_UpdateTaskStatus
+                Permissions.BoardProposal_Read,
+                Permissions.BoardProposal_ViewTasks,
+                Permissions.BoardProposal_UpdateTaskStatus
             ],
-            [SeedRoles.BoardProposal_UserObserver] =
+            [Roles.BoardProposal_UserObserver] =
             [
-                SeedPermissions.BoardProposal_Read,
-                SeedPermissions.BoardProposal_ViewTasks,
-                SeedPermissions.BoardProposal_UpdateTaskStatus
+                Permissions.BoardProposal_Read,
+                Permissions.BoardProposal_ViewTasks,
+                Permissions.BoardProposal_UpdateTaskStatus
             ],
-            [SeedRoles.BoardProposal_AuditObserver] =
+            [Roles.BoardProposal_AuditObserver] =
             [
-                SeedPermissions.BoardProposal_Read,
-                SeedPermissions.BoardProposal_ViewTasks
+                Permissions.BoardProposal_Read,
+                Permissions.BoardProposal_ViewTasks
             ]
         };
 

@@ -1,6 +1,6 @@
-﻿namespace EmployeeManagementService.Infrastructure.Persistence.Seeding.Constants;
+﻿namespace EmployeeManagementService.Domain.Constants;
 
-public class SeedPermissions
+public class Permissions
 {
     //BoardProposal
     public const string BoardProposal_Read = "board-proposals.read";
@@ -15,7 +15,7 @@ public class SeedPermissions
     public const string BoardProposal_UpdateTaskStatus = "board-proposals.tasks.status.update";
 
     public static readonly string[] All =
-        typeof(SeedPermissions)
+        typeof(Permissions)
             .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
             .Select(f => (string)f.GetRawConstantValue()!)

@@ -1,4 +1,4 @@
-﻿using EmployeeManagementService.Application.Contracts;
+using EmployeeManagementService.Application.Contracts;
 using EmployeeManagementService.Application.Exceptions;
 using EmployeeManagementService.Domain.Enums;
 using EmployeeManagementService.Domain.Models.BoardProposal;
@@ -43,6 +43,14 @@ public class SearchBoardProposalRequestHandler
                 MeetingFormat = x.MeetingFormat,
                 SecretaryEmployeeId = x.SecretaryEmployeeId,
                 Status = x.Status,
+                ActiveApprovalTargets = x.ApprovalAssignments
+                    .Where(a => a.Status == RequestApprovalAssignmentStatus.Active)
+                    .Select(a => new RequestApprovalTargetDetails
+                    {
+                        TargetType = a.TargetType.ToString(),
+                        TargetValue = a.TargetValue
+                    })
+                    .ToList(),
                 AgendaItems = x.AgendaItems
                     .OrderBy(a => a.Order)
                     .Select(a => new BoardProposalAgendaItemDetails

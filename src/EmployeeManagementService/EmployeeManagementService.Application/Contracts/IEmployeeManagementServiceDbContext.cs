@@ -1,4 +1,5 @@
-﻿using EmployeeManagementService.Domain.Models;
+using EmployeeManagementService.Domain.Common;
+using EmployeeManagementService.Domain.Models;
 using EmployeeManagementService.Domain.Models.BoardProposal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -15,6 +16,7 @@ public interface IEmployeeManagementServiceDbContext
     DbSet<BoardProposalAgendaItem> BoardProposalAgendaItems { get; set; }
     DbSet<BoardProposalVote> BoardProposalVotes { get; set; }
     DbSet<BoardProposalTask> BoardProposalTasks { get; set; }
+    DbSet<RequestApprovalAssignment<int>> RequestApprovalAssignments { get; set; }
     DbSet<Attachment> Attachments { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

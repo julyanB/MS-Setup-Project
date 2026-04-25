@@ -21,6 +21,15 @@ public class BoardProposalRequestDetails
     public IReadOnlyCollection<BoardProposalAgendaItemDetails> AgendaItems { get; set; } = [];
 
     public IReadOnlyCollection<AttachmentDetails> Attachments { get; set; } = [];
+
+    public IReadOnlyCollection<RequestApprovalTargetDetails> ActiveApprovalTargets { get; set; } = [];
+}
+
+public class RequestApprovalTargetDetails
+{
+    public string TargetType { get; set; } = null!;
+
+    public string TargetValue { get; set; } = null!;
 }
 
 public class BoardProposalAgendaItemDetails

@@ -59,6 +59,11 @@ public class BoardProposalRequestConfiguration : IEntityTypeConfiguration<BoardP
 
         builder.HasIndex(x => x.Status)
             .HasDatabaseName("IX_BoardProposalRequests_Status");
+
+        builder.HasMany(x => x.ApprovalAssignments)
+            .WithOne()
+            .HasForeignKey(x => x.RequestId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
 }

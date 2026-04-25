@@ -1,6 +1,6 @@
-﻿namespace EmployeeManagementService.Infrastructure.Persistence.Seeding.Constants;
+﻿namespace EmployeeManagementService.Domain.Constants;
 
-public static class SeedRoles
+public static class Roles
 {
     // BoardProposal
     public const string BoardProposal_SecretaryAdmin = "BoardProposalSecretaryAdmin";
@@ -10,7 +10,7 @@ public static class SeedRoles
     public const string BoardProposal_AuditObserver = "BoardProposalAuditObserver";
 
     public static readonly string[] All =
-        typeof(SeedRoles)
+        typeof(Roles)
             .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
             .Select(f => (string)f.GetRawConstantValue()!)

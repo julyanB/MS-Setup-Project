@@ -43,6 +43,7 @@ public class EmployeeManagementServiceDbContext : IdentityDbContext<User>, IEmpl
     public DbSet<BoardProposalAgendaItem> BoardProposalAgendaItems { get; set; }
     public DbSet<BoardProposalVote> BoardProposalVotes { get; set; }
     public DbSet<BoardProposalTask> BoardProposalTasks { get; set; }
+    public DbSet<RequestApprovalAssignment<int>> RequestApprovalAssignments { get; set; }
     public DbSet<Attachment> Attachments { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
