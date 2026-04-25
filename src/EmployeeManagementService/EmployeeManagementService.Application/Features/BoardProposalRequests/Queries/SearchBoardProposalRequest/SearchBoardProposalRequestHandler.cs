@@ -79,7 +79,9 @@ public class SearchBoardProposalRequestHandler
                                 ResponsibleEmployeeId = t.ResponsibleEmployeeId,
                                 DueDate = t.DueDate,
                                 Order = t.Order,
-                                Status = t.Status
+                                Status = t.Status,
+                                ExtendedDueDate = t.ExtendedDueDate,
+                                Comment = t.Comment
                             })
                             .ToList()
                     })

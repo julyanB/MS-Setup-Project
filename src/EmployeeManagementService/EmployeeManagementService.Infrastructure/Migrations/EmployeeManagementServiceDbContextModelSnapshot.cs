@@ -116,7 +116,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("Attachments", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -195,7 +195,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("BoardProposalAgendaItems", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalRequest", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalRequest", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -268,7 +268,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("BoardProposalRequests", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalTask", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -336,7 +336,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("BoardProposalTasks", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalVote", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalVote", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -663,9 +663,9 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(true);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", b =>
                 {
-                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposalRequest", "BoardProposalRequest")
+                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalRequest", "BoardProposalRequest")
                         .WithMany("AgendaItems")
                         .HasForeignKey("BoardProposalRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -674,9 +674,9 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Navigation("BoardProposalRequest");
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalTask", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalTask", b =>
                 {
-                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", "AgendaItem")
+                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", "AgendaItem")
                         .WithMany("Tasks")
                         .HasForeignKey("AgendaItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -685,9 +685,9 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Navigation("AgendaItem");
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalVote", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalVote", b =>
                 {
-                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", "AgendaItem")
+                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", "AgendaItem")
                         .WithMany("Votes")
                         .HasForeignKey("AgendaItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -781,14 +781,14 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", b =>
                 {
                     b.Navigation("Tasks");
 
                     b.Navigation("Votes");
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalRequest", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalRequest", b =>
                 {
                     b.Navigation("AgendaItems");
                 });

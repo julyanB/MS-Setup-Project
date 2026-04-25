@@ -80,6 +80,10 @@ public class BoardProposalTaskDetails
     public int Order { get; set; }
 
     public BoardProposalTaskStatus Status { get; set; }
+
+    public DateTime? ExtendedDueDate { get; set; }
+
+    public string? Comment { get; set; }
 }
 
 public class AttachmentDetails

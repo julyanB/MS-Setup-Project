@@ -1,11 +1,11 @@
 ﻿using EmployeeManagementService.Application;
 using EmployeeManagementService.Application.Common;
-using EmployeeManagementService.Domain.Models;
 using EmployeeManagementService.Infrastructure;
 using EmployeeManagementService.Infrastructure.BackgroundJobs;
 using EmployeeManagementService.Infrastructure.Configuration;
-using EmployeeManagementService.Infrastructure.Identity.Authorization;
+using EmployeeManagementService.Infrastructure.Identity.UserData;
 using EmployeeManagementService.Infrastructure.Persistence;
+using EmployeeManagementService.Infrastructure.Persistence.Seeding;
 using EmployeeManagementService.Web;
 using EmployeeManagementService.Web.Hubs;
 using EmployeeManagementService.Web.Middleware;
@@ -79,49 +79,8 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] seededRoles = ["Admin"];
-
-    foreach (var roleName in seededRoles)
-    {
-        if (!await roleManager.RoleExistsAsync(roleName))
-        {
-            await roleManager.CreateAsync(new IdentityRole(roleName));
-        }
-    }
-
-    var adminRole = await roleManager.FindByNameAsync("Admin");
-    if (adminRole != null)
-    {
-        // Ensure the "roles.manage" permission exists in the Permissions table
-        var rolesManagePermission = await db.Permissions
-            .FirstOrDefaultAsync(p => p.Name == PermissionClaims.RolesManage);
-
-        if (rolesManagePermission is null)
-        {
-            rolesManagePermission = new Permission
-            {
-                Name = PermissionClaims.RolesManage,
-                Description = "Manage roles and permissions",
-                CreatedAt = DateTimeOffset.UtcNow
-            };
-            db.Permissions.Add(rolesManagePermission);
-            await db.SaveChangesAsync();
-        }
-
-        // Bind the permission to the Admin role if not already bound
-        var alreadyBound = await db.RolePermissions
-            .AnyAsync(rp => rp.RoleId == adminRole.Id && rp.PermissionId == rolesManagePermission.Id);
-
-        if (!alreadyBound)
-        {
-            db.RolePermissions.Add(new RolePermission
-            {
-                RoleId = adminRole.Id,
-                PermissionId = rolesManagePermission.Id
-            });
-            await db.SaveChangesAsync();
-        }
-    }
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    await IdentitySeeder.SeedAsync(db, roleManager, userManager);
 }
 
 if (app.Environment.IsDevelopment())

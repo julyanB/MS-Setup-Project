@@ -6,6 +6,7 @@ using EmployeeManagementService.Application.Features.BoardProposalRequests.Comma
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalVote;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.ReorderBoardProposalTasks;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.SetBoardProposalAgendaItemDecision;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.UpdateBoardProposalTaskStatus;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagementService.Web.Features;
@@ -88,6 +89,18 @@ public class BoardProposalRequestsController : ControllerBase
         CancellationToken cancellationToken)
     {
         request.AgendaItemId = agendaItemId;
+        await requestHandler.Handle(request, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("tasks/{taskId:int}/status")]
+    public async Task<IActionResult> UpdateTaskStatus(
+        int taskId,
+        [FromBody] UpdateBoardProposalTaskStatusRequest request,
+        [FromServices] UpdateBoardProposalTaskStatusRequestHandler requestHandler,
+        CancellationToken cancellationToken)
+    {
+        request.TaskId = taskId;
         await requestHandler.Handle(request, cancellationToken);
         return NoContent();
     }

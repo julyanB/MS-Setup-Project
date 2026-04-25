@@ -17,6 +17,7 @@ using EmployeeManagementService.Application.Features.BoardProposalRequests.Comma
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalVote;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.ReorderBoardProposalTasks;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.SetBoardProposalAgendaItemDecision;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.UpdateBoardProposalTaskStatus;
 using EmployeeManagementService.Application.Features.Attachments.Commands.DeactivateAttachment;
 using EmployeeManagementService.Application.Features.Attachments.Commands.UploadAttachment;
 using EmployeeManagementService.Application.Features.Attachments.Queries.DownloadAttachment;
@@ -44,6 +45,7 @@ public static class ApplicationConfiguration
             .AddTransient<AddBoardProposalTaskRequestHandler>()
             .AddTransient<AddBoardProposalVoteRequestHandler>()
             .AddTransient<ReorderBoardProposalTasksRequestHandler>()
+            .AddTransient<UpdateBoardProposalTaskStatusRequestHandler>()
             .AddTransient<UploadAttachmentRequestHandler>()
             .AddTransient<DownloadAttachmentRequestHandler>()
             .AddTransient<DeactivateAttachmentRequestHandler>()
