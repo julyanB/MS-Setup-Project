@@ -3,25 +3,45 @@ import { api } from "./api";
 export type BoardProposalStatus =
   | "Draft"
   | "AgendaPreparation"
-  | "MaterialsPreparation"
-  | "ReadyForReview"
+  | "SecretaryReview"
+  | "ChairpersonReview"
+  | "ReadyForSending"
   | "Sent"
   | "Held"
-  | "DecisionsRegistration"
-  | "TaskMonitoring"
+  | "DecisionsAndTasks"
+  | "DeadlineMonitoring"
   | "Closed"
   | "Cancelled";
 
 export type EmployeeRequestAction =
   | "Submit"
-  | "MoveNext"
+  | "Approve"
+  | "Return"
+  | "Reject"
   | "Send"
   | "MarkHeld"
-  | "RegisterDecisions"
+  | "StartDecisionRegistration"
   | "StartMonitoring"
   | "Close"
   | "Cancel"
   | "Reopen";
+
+export type BoardProposalDecisionStatus =
+  | "Approved"
+  | "Rejected"
+  | "Postponed"
+  | "ForInformation"
+  | "Withdrawn"
+  | "EscalatedToSupervisoryBoard";
+
+export type BoardProposalTaskStatus =
+  | "ToDo"
+  | "InProgress"
+  | "Completed"
+  | "Cancelled"
+  | "NotApplicable"
+  | "Extended"
+  | "Other";
 
 export type BoardProposalAgendaItemDetails = {
   id: number;
@@ -32,7 +52,7 @@ export type BoardProposalAgendaItemDetails = {
   category: string;
   description?: string | null;
   order: number;
-  decisionStatus?: string | null;
+  decisionStatus?: BoardProposalDecisionStatus | null;
   decisionText?: string | null;
   finalVote?: string | null;
   notes?: string | null;
@@ -53,8 +73,10 @@ export type BoardProposalTaskDetails = {
   description?: string | null;
   responsibleEmployeeId: string;
   dueDate: string;
-  status: string;
+  status: BoardProposalTaskStatus;
   order?: number;
+  extendedDueDate?: string | null;
+  comment?: string | null;
 };
 
 export type AttachmentDetails = {
@@ -114,7 +136,7 @@ export const boardProposalApi = {
   setDecision: (
     agendaItemId: number,
     body: {
-      decisionStatus: string;
+      decisionStatus: BoardProposalDecisionStatus;
       decisionText: string;
       finalVote?: string;
       notes?: string;
@@ -132,7 +154,7 @@ export const boardProposalApi = {
       description?: string;
       responsibleEmployeeId: string;
       dueDate: string;
-      status: string;
+      status: BoardProposalTaskStatus;
     },
   ) =>
     api.post<number>(
@@ -148,6 +170,16 @@ export const boardProposalApi = {
       `/board-proposal-requests/agenda-items/${agendaItemId}/tasks/reorder`,
       { agendaItemId, items },
     ),
+
+  updateTaskStatus: (
+    taskId: number,
+    body: {
+      status: BoardProposalTaskStatus;
+      extendedDueDate?: string;
+      comment?: string;
+    },
+  ) =>
+    api.put<void>(`/board-proposal-requests/tasks/${taskId}/status`, body),
 
   addVote: (
     agendaItemId: number,

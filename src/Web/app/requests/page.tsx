@@ -232,12 +232,13 @@ function RequestsContent() {
                 <option>All</option>
                 <option>Draft</option>
                 <option>AgendaPreparation</option>
-                <option>MaterialsPreparation</option>
-                <option>ReadyForReview</option>
+                <option>SecretaryReview</option>
+                <option>ChairpersonReview</option>
+                <option>ReadyForSending</option>
                 <option>Sent</option>
                 <option>Held</option>
-                <option>DecisionsRegistration</option>
-                <option>TaskMonitoring</option>
+                <option>DecisionsAndTasks</option>
+                <option>DeadlineMonitoring</option>
                 <option>Closed</option>
                 <option>Cancelled</option>
               </select>

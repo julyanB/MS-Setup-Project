@@ -58,8 +58,14 @@ export async function apiFetch<T = unknown>(
     : await response.text().catch(() => null);
 
   if (!response.ok) {
+    const errorMessages =
+      payload && typeof payload === "object" && "errorMessages" in payload
+        ? (payload as { errorMessages?: unknown }).errorMessages
+        : null;
     const message =
-      (payload && typeof payload === "object" && "title" in payload
+      Array.isArray(errorMessages) && errorMessages.length > 0
+        ? errorMessages.map(String).join("\n")
+        : (payload && typeof payload === "object" && "title" in payload
         ? String((payload as { title: unknown }).title)
         : null) ?? `Request failed: ${response.status}`;
     throw new ApiError(response.status, message, payload);

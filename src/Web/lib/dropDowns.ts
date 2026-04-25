@@ -57,9 +57,11 @@ export const fallbackDropDowns: Record<string, DropDownOption[]> = {
   ],
   TaskStatus: [
     option("TaskStatus", "ToDo", "To do", 10),
-    option("TaskStatus", "Completed", "Completed", 20),
-    option("TaskStatus", "Extended", "Extended", 30),
-    option("TaskStatus", "Other", "Other", 40),
+    option("TaskStatus", "InProgress", "In progress", 20),
+    option("TaskStatus", "Completed", "Completed", 30),
+    option("TaskStatus", "Cancelled", "Cancelled", 40),
+    option("TaskStatus", "NotApplicable", "Not applicable", 50),
+    option("TaskStatus", "Extended", "Extended", 60),
   ],
   DocumentType: [option("DocumentType", "BoardMaterial", "Board material", 10)],
 };
