@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSeries.DOmniBus.Lite" Version="1.0.3" />
+    <PackageReference Include="DSeries.DOmniBus.Lite" Version="1.0.4" />
     <PackageReference Include="DSeries.DStateMachine.Core" Version="1.0.5" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />

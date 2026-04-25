@@ -1,4 +1,5 @@
 ﻿using EmployeeManagementService.Domain.Models;
+using EmployeeManagementService.Domain.Models.BoardProposal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Query;
@@ -10,6 +11,11 @@ public interface IEmployeeManagementServiceDbContext
     DbSet<Permission> Permissions { get; set; }
     DbSet<RolePermission> RolePermissions { get; set; }
     DbSet<UserPermission> UserPermissions { get; set; }
+    DbSet<BoardProposalRequest> BoardProposalRequests { get; set; }
+    DbSet<BoardProposalAgendaItem> BoardProposalAgendaItems { get; set; }
+    DbSet<BoardProposalVote> BoardProposalVotes { get; set; }
+    DbSet<BoardProposalTask> BoardProposalTasks { get; set; }
+    DbSet<Attachment> Attachments { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

@@ -9,6 +9,17 @@ using Microsoft.Extensions.DependencyInjection;
 using EmployeeManagementService.Application.MessageEmitters.RequestMetaDataEmitter.Create;
 using EmployeeManagementService.Domain.Enums;
 using EmployeeManagementService.Application.MessageEmitters.RequestMetaDataEmitter.Update;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.CreateBoardProposalRequest;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.NextBoardProposalStep;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Queries.SearchBoardProposalRequest;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalAgendaItem;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalTask;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalVote;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.ReorderBoardProposalTasks;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.SetBoardProposalAgendaItemDecision;
+using EmployeeManagementService.Application.Features.Attachments.Commands.DeactivateAttachment;
+using EmployeeManagementService.Application.Features.Attachments.Commands.UploadAttachment;
+using EmployeeManagementService.Application.Features.Attachments.Queries.DownloadAttachment;
 
 namespace EmployeeManagementService.Application;
 
@@ -25,6 +36,17 @@ public static class ApplicationConfiguration
                 configuration.GetSection(DOmniBusSettings.SectionName))
             .AddTransient<CreateUserService>()
             .AddTransient<LoginUserService>()
+            .AddTransient<CreateBoardProposalRequestHandler>()
+            .AddTransient<NextBoardProposalStepRequestHandler>()
+            .AddTransient<SearchBoardProposalRequestHandler>()
+            .AddTransient<AddBoardProposalAgendaItemRequestHandler>()
+            .AddTransient<SetBoardProposalAgendaItemDecisionRequestHandler>()
+            .AddTransient<AddBoardProposalTaskRequestHandler>()
+            .AddTransient<AddBoardProposalVoteRequestHandler>()
+            .AddTransient<ReorderBoardProposalTasksRequestHandler>()
+            .AddTransient<UploadAttachmentRequestHandler>()
+            .AddTransient<DownloadAttachmentRequestHandler>()
+            .AddTransient<DeactivateAttachmentRequestHandler>()
             .AddMessaging(configuration)
             .AddValidatorsFromAssemblyContaining<ApplicationSettings>();
 

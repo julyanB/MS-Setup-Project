@@ -4,6 +4,7 @@ using EmployeeManagementService.Application.Exceptions;
 using EmployeeManagementService.Domain.Common;
 using EmployeeManagementService.Domain.Exceptions;
 using EmployeeManagementService.Domain.Models;
+using EmployeeManagementService.Domain.Models.BoardProposal;
 using EmployeeManagementService.Infrastructure.Identity.UserData;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
@@ -38,6 +39,11 @@ public class EmployeeManagementServiceDbContext : IdentityDbContext<User>, IEmpl
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserPermission> UserPermissions { get; set; }
+    public DbSet<BoardProposalRequest> BoardProposalRequests { get; set; }
+    public DbSet<BoardProposalAgendaItem> BoardProposalAgendaItems { get; set; }
+    public DbSet<BoardProposalVote> BoardProposalVotes { get; set; }
+    public DbSet<BoardProposalTask> BoardProposalTasks { get; set; }
+    public DbSet<Attachment> Attachments { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

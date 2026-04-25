@@ -4,6 +4,7 @@ using EmployeeManagementService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeeManagementService.Infrastructure.Migrations
 {
     [DbContext(typeof(EmployeeManagementServiceDbContext))]
-    partial class EmployeeManagementServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424113730_AddAttachmentsAndBoardProposalRequestTables")]
+    partial class AddAttachmentsAndBoardProposalRequestTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -302,9 +305,6 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
                     b.Property<string>("ResponsibleEmployeeId")
                         .IsRequired()
                         .HasMaxLength(450)
@@ -327,8 +327,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AgendaItemId", "Order")
-                        .HasDatabaseName("IX_BoardProposalTasks_AgendaItem_Order");
+                    b.HasIndex("AgendaItemId");
 
                     b.HasIndex("ResponsibleEmployeeId", "DueDate")
                         .HasDatabaseName("IX_BoardProposalTasks_Responsible_DueDate");
