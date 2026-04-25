@@ -27,8 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${sora.variable}`}>
-      <body>
+    <html
+      lang="en"
+      className={`${jakarta.variable} ${sora.variable}`}
+      suppressHydrationWarning
+    >
+      <body suppressHydrationWarning>
         <div className="orb orb-1" aria-hidden />
         <div className="orb orb-2" aria-hidden />
         <div className="orb orb-3" aria-hidden />
