@@ -38,9 +38,11 @@ public static class DropDownSeeder
             Option("VoteType", "Abstained", "Abstained", 60),
 
             Option("TaskStatus", "ToDo", "To do", 10),
-            Option("TaskStatus", "Completed", "Completed", 20),
-            Option("TaskStatus", "Extended", "Extended", 30),
-            Option("TaskStatus", "Other", "Other", 40),
+            Option("TaskStatus", "InProgress", "In progress", 20),
+            Option("TaskStatus", "Completed", "Completed", 30),
+            Option("TaskStatus", "Cancelled", "Cancelled", 40),
+            Option("TaskStatus", "NotApplicable", "Not applicable", 50),
+            Option("TaskStatus", "Extended", "Extended", 60),
 
             Option("DocumentType", "BoardMaterial", "Board material", 10),
         };
