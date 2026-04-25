@@ -21,4 +21,10 @@ public record SearchRequestMetaDataRequest
 
     [FromQuery(Name = "createdBy")]
     public string? CreatedBy { get; init; }
+
+    [FromQuery(Name = "assignedToMe")]
+    public bool AssignedToMe { get; init; }
+
+    [FromQuery(Name = "assignedToMyRole")]
+    public bool AssignedToMyRole { get; init; }
 }

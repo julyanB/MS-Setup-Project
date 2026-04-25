@@ -1,4 +1,5 @@
-﻿using CoreService.Application.Contracts;
+using CoreService.Application.Contracts;
+using CoreService.Domain.Enums;
 using CoreService.Domain.Models;
 using DOmniBus.Lite;
 
@@ -19,16 +20,34 @@ public class CreateRequestMetaDataHandler : IEventHandler<CreateRequestMetaDataE
         {
             Id = @event.Id,
             RequestType = @event.RequestType,
+            VId = RequestTypeExtensions.BuildVId(@event.RequestType, @event.Id),
             Status = @event.Status,
             CreatedBy = @event.CreatedBy,
             ModifiedBy = @event.ModifiedBy,
             UpdatedAt = @event.UpdatedAt,
             CreatedAt = @event.CreatedAt,
             Seen = false,
-            AdditionalJsonData = @event.AdditionalJsonData
+            AdditionalJsonData = @event.AdditionalJsonData,
+            ApprovalTargets = MapTargets(@event.Id, @event.RequestType, @event.ApprovalTargets)
         };
 
         await _dbContext.RequestMetaData.AddAsync(requestMetaData, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    private static List<RequestMetaDataApprovalTarget> MapTargets(
+        int requestId,
+        string requestType,
+        IEnumerable<ApprovalTargetMessage> targets)
+        => targets
+            .Where(x => !string.IsNullOrWhiteSpace(x.TargetValue))
+            .Select(x => new RequestMetaDataApprovalTarget
+            {
+                RequestId = requestId,
+                RequestType = requestType,
+                TargetType = Enum.Parse<RequestApprovalTargetType>(x.TargetType, ignoreCase: true),
+                TargetValue = x.TargetValue.Trim(),
+                Status = Enum.Parse<RequestApprovalAssignmentStatus>(x.Status, ignoreCase: true)
+            })
+            .ToList();
 }

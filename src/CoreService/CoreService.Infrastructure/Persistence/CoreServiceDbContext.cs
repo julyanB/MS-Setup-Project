@@ -34,6 +34,7 @@ public class CoreServiceDbContext : DbContext, ICoreServiceDbContext
     }
 
     public DbSet<RequestMetaData> RequestMetaData { get; set; }
+    public DbSet<RequestMetaDataApprovalTarget> RequestMetaDataApprovalTargets { get; set; }
 
     public DbSet<DropDownOption> DropDownOptions { get; set; }
 

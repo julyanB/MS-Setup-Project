@@ -4,6 +4,7 @@ using CoreService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoreService.Infrastructure.Migrations
 {
     [DbContext(typeof(CoreServiceDbContext))]
-    partial class CoreServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425215535_AddEmplApproval")]
+    partial class AddEmplApproval
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -111,15 +114,7 @@ namespace CoreService.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("VId")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
                     b.HasKey("RequestType", "Id");
-
-                    b.HasIndex("VId")
-                        .IsUnique();
 
                     b.ToTable("RequestMetaData");
                 });

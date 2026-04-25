@@ -5,6 +5,7 @@ namespace CoreService.Domain.Models;
 public class RequestMetaData : Entity<int>
 {
     public required string RequestType { get; set; }
+    public required string VId { get; set; }
     public required string Status { get; set; }
 
     public required string CreatedBy { get; set; }
@@ -15,4 +16,6 @@ public class RequestMetaData : Entity<int>
     public bool Seen { get; set; }
 
     public string? AdditionalJsonData { get; set; }
+
+    public ICollection<RequestMetaDataApprovalTarget> ApprovalTargets { get; set; } = [];
 }

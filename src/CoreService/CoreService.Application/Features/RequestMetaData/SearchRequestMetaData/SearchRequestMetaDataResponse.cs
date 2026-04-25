@@ -3,6 +3,7 @@ namespace CoreService.Application.Features.RequestMetaData.SearchRequestMetaData
 public record RequestMetaDataItem
 {
     public required int Id { get; init; }
+    public required string VId { get; init; }
     public required string RequestType { get; init; }
     public required string Status { get; init; }
     public required string CreatedBy { get; init; }

@@ -8,6 +8,7 @@ namespace CoreService.Application.Contracts;
 public interface ICoreServiceDbContext
 {
     DbSet<RequestMetaData> RequestMetaData { get; set; }
+    DbSet<RequestMetaDataApprovalTarget> RequestMetaDataApprovalTargets { get; set; }
 
     DbSet<DropDownOption> DropDownOptions { get; set; }
 

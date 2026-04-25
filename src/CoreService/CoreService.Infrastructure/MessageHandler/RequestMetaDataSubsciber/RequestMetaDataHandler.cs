@@ -1,4 +1,5 @@
 ﻿using CoreService.Application.Contracts;
+using CoreService.Domain.Enums;
 using CoreService.Domain.Models;
 using DOmniBus.Lite;
 
@@ -19,6 +20,7 @@ public class RequestMetaDataHandler : IEventHandler<RequestMetaDataEvent>
         {
             Id = @event.Id,
             RequestType = @event.RequestType,
+            VId = RequestTypeExtensions.BuildVId(@event.RequestType, @event.Id),
             Status = @event.Status,
             CreatedBy = @event.CreatedBy,
             ModifiedBy = @event.ModifiedBy,

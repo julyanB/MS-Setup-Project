@@ -17,6 +17,13 @@ public class RequestMetaDataConfiguration : IEntityTypeConfiguration<RequestMeta
             .IsRequired()
             .HasMaxLength(64);
 
+        builder.Property(x => x.VId)
+            .IsRequired()
+            .HasMaxLength(64);
+
+        builder.HasIndex(x => x.VId)
+            .IsUnique();
+
         builder.Property(x => x.Status)
             .IsRequired()
             .HasMaxLength(64);
