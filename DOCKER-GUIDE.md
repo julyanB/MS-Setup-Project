@@ -177,6 +177,28 @@ docker compose -f docker-compose.infra.yml down -v
 
 ## Common Issues
 
+### Migrating from the old single `docker-compose.yml`
+
+If you ran this stack before the compose split, you have containers labeled with the old `banking-platform` project. `docker compose -f docker-compose.infra.yml up -d` and `docker compose -f docker-compose.services.yml up -d` will fail with `Conflict. The container name "/banking-sqlserver" is already in use` (or any other `banking-*` container).
+
+One-time cleanup — removes the old containers but **keeps your named volumes** (`sqlserver-data`, `kafka-data`, `redis-data`, `elasticsearch-data`), so your databases and Kafka topics survive:
+
+```powershell
+# Kill leftovers from the old banking-platform project
+docker rm -f `
+  banking-gateway banking-employee-management banking-core-service banking-banking-operations `
+  banking-sqlserver banking-redis banking-kafka banking-kafka-ui banking-elasticsearch banking-kibana
+
+# If you ever ran `docker network create banking-net` by hand, delete it so infra can create it with the right labels
+docker network rm banking-net 2>$null
+
+# Now the normal flow works
+docker compose -f docker-compose.infra.yml up -d
+docker compose -f docker-compose.services.yml up -d --build
+```
+
+New infra containers will reattach to the existing volumes — no data loss.
+
 ### Services fail with "network banking-net not found"
 
 Infra isn't running. Start it first:
@@ -184,6 +206,19 @@ Infra isn't running. Start it first:
 ```bash
 docker compose -f docker-compose.infra.yml up -d
 ```
+
+### "network banking-net was found but has incorrect label"
+
+You created `banking-net` manually with `docker network create banking-net`. Compose refuses to adopt networks it didn't label itself. Delete it and let infra create it:
+
+```bash
+docker network rm banking-net
+docker compose -f docker-compose.infra.yml up -d
+```
+
+### "container name ... is already in use"
+
+A container with that name exists from a previous compose project (usually the old `banking-platform`). See *Migrating from the old single `docker-compose.yml`* above.
 
 ### SQL Server takes too long to start
 
