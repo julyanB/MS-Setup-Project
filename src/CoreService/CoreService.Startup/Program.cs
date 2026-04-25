@@ -4,6 +4,7 @@ using CoreService.Infrastructure;
 using CoreService.Infrastructure.BackgroundJobs;
 using CoreService.Infrastructure.Configuration;
 using CoreService.Infrastructure.Persistence;
+using CoreService.Infrastructure.Persistence.Seeding;
 using CoreService.Web;
 using CoreService.Web.Hubs;
 using CoreService.Web.Middleware;
@@ -24,10 +25,24 @@ builder.Configuration
     .AddJsonFile("redis.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"redis.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddJsonFile("hangfire.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"hangfire.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+    .AddJsonFile($"hangfire.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    // Re-apply environment variables and CLI args LAST so they override the
+    // infrastructure JSON files above (e.g. DOmniBus__Kafka__BootstrapServers
+    // from docker-compose should win over kafka.Development.json).
+    .AddEnvironmentVariables()
+    .AddCommandLine(args);
 
 builder.Host.UseSerilog((context, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration));
+
+// Don't tear the host down if a BackgroundService (e.g. DOmniBus.Lite Kafka
+// consumer) throws — most failures are transient (topic not yet created,
+// broker restarted). The library will surface the exception in logs and
+// retry on its own.
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
 
 builder.Services
     .AddHttpLogging(logging =>
@@ -60,6 +75,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<CoreServiceDbContext>();
     await db.Database.MigrateAsync();
+    await DropDownSeeder.SeedAsync(db);
 }
 
 if (app.Environment.IsDevelopment())

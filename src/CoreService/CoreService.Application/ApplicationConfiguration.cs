@@ -7,7 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 using CoreService.Domain.Enums;
 using CoreService.Application.MessageHandler.RequestMetaDataSubsciber.Create;
 using CoreService.Application.MessageHandler.RequestMetaDataSubsciber.Update;
+using CoreService.Application.Features.DropDowns.GetDropDownOptions;
+using CoreService.Application.Features.DropDowns.SetDropDownOptions;
 using CoreService.Application.Features.RequestMetaData.MarkRequestMetaDataSeen;
+using CoreService.Application.Features.RequestMetaData.SearchRequestMetaData;
 
 namespace CoreService.Application;
 
@@ -52,7 +55,10 @@ public static class ApplicationConfiguration
         this IServiceCollection services)
     {
         return services
-            .AddTransient<MarkRequestMetaDataSeenRequestHandler>();
+            .AddTransient<GetDropDownOptionsRequestHandler>()
+            .AddTransient<SetDropDownOptionsRequestHandler>()
+            .AddTransient<MarkRequestMetaDataSeenRequestHandler>()
+            .AddTransient<SearchRequestMetaDataRequestHandler>();
     }
 
     private static void SetKafkaSettings(DOmniBusLiteOptions bus, KafkaSettings kafka)

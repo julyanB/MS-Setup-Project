@@ -9,6 +9,8 @@ public interface ICoreServiceDbContext
 {
     DbSet<RequestMetaData> RequestMetaData { get; set; }
 
+    DbSet<DropDownOption> DropDownOptions { get; set; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     Task<int> ExecuteSqlRawAsync(string sql, CancellationToken cancellationToken = default);

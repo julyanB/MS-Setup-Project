@@ -35,6 +35,8 @@ public class CoreServiceDbContext : DbContext, ICoreServiceDbContext
 
     public DbSet<RequestMetaData> RequestMetaData { get; set; }
 
+    public DbSet<DropDownOption> DropDownOptions { get; set; }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ApplyAuditStamps();
