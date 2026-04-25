@@ -1,3 +1,5 @@
+﻿using EmployeeManagementService.Domain.Enums.BoardProposal;
+
 namespace EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalTask;
 
 public class AddBoardProposalTaskRequest
@@ -12,5 +14,5 @@ public class AddBoardProposalTaskRequest
 
     public DateTime DueDate { get; set; }
 
-    public string Status { get; set; } = "ToDo";
+    public BoardProposalTaskStatus Status { get; set; } = BoardProposalTaskStatus.ToDo;
 }

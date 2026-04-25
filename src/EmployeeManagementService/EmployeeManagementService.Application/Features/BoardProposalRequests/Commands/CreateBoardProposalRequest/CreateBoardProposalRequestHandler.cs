@@ -3,7 +3,7 @@ using DOmniBus.Lite;
 using EmployeeManagementService.Application.Contracts;
 using EmployeeManagementService.Application.Exceptions;
 using EmployeeManagementService.Application.MessageEmitters.RequestMetaDataEmitter.Create;
-using EmployeeManagementService.Domain.Enums;
+using EmployeeManagementService.Domain.Enums.BoardProposal;
 using EmployeeManagementService.Domain.Models.BoardProposal;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;

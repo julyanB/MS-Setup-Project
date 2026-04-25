@@ -1,4 +1,4 @@
-using EmployeeManagementService.Domain.Enums;
+﻿using EmployeeManagementService.Domain.Enums.BoardProposal;
 
 namespace EmployeeManagementService.Application.Features.BoardProposalRequests.Queries.SearchBoardProposalRequest;
 
@@ -41,7 +41,7 @@ public class BoardProposalAgendaItemDetails
 
     public int Order { get; set; }
 
-    public string? DecisionStatus { get; set; }
+    public BoardProposalDecisionStatus? DecisionStatus { get; set; }
 
     public string? DecisionText { get; set; }
 
@@ -79,7 +79,7 @@ public class BoardProposalTaskDetails
 
     public int Order { get; set; }
 
-    public string Status { get; set; } = null!;
+    public BoardProposalTaskStatus Status { get; set; }
 }
 
 public class AttachmentDetails

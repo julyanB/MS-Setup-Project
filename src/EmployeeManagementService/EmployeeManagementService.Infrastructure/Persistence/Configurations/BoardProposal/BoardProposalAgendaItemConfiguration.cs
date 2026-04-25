@@ -1,4 +1,4 @@
-﻿using EmployeeManagementService.Domain.Models.BoardProposal;
+using EmployeeManagementService.Domain.Models.BoardProposal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -39,6 +39,7 @@ public class BoardProposalAgendaItemConfiguration : IEntityTypeConfiguration<Boa
             .HasMaxLength(1500);
 
         builder.Property(x => x.DecisionStatus)
+            .HasConversion<string>()
             .HasMaxLength(64);
 
         builder.Property(x => x.FinalVote)

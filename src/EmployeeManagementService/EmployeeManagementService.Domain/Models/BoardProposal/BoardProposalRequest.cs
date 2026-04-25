@@ -1,5 +1,5 @@
 ﻿using EmployeeManagementService.Domain.Common;
-using EmployeeManagementService.Domain.Enums;
+using EmployeeManagementService.Domain.Enums.BoardProposal;
 
 namespace EmployeeManagementService.Domain.Models.BoardProposal;
 

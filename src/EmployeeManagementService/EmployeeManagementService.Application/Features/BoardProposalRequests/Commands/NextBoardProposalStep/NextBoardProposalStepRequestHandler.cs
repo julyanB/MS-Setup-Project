@@ -3,8 +3,11 @@ using EmployeeManagementService.Application.Contracts;
 using EmployeeManagementService.Application.Exceptions;
 using EmployeeManagementService.Application.MessageEmitters.RequestMetaDataEmitter.Update;
 using EmployeeManagementService.Domain.Enums;
+using EmployeeManagementService.Domain.Enums.BoardProposal;
+using EmployeeManagementService.Domain.Models;
 using EmployeeManagementService.Domain.Models.BoardProposal;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.NextBoardProposalStep;
@@ -49,14 +52,32 @@ public class NextBoardProposalStepRequestHandler
             throw new NotFoundException(nameof(BoardProposalRequest), request.Id);
         }
 
-        var hasAgendaItems = requestEntity.AgendaItems.Count > 0;
-        var hasDecisions = requestEntity.AgendaItems.All(x => !string.IsNullOrWhiteSpace(x.DecisionStatus));
-        var hasTasks = requestEntity.AgendaItems.SelectMany(x => x.Tasks).Any();
+        var attachments = await _dbContext.Attachments
+            .AsNoTracking()
+            .Where(x => x.RequestType == nameof(BoardProposalRequest)
+                && x.RequestId == requestEntity.Id
+                && x.IsActive)
+            .ToListAsync(cancellationToken);
+
+        ValidateTransitionRequirements(requestEntity, attachments, request.Action);
+
+        var hasCompleteAgenda = HasCompleteAgenda(requestEntity, attachments);
+        var hasChairpersonAgenda = HasChairpersonAgenda(requestEntity);
+        var hasDecisions = HasDecisions(requestEntity);
+        var hasExecutableTasks = HasExecutableTasks(requestEntity);
+        var canClose = CanClose(requestEntity);
 
         var stateMachine = new DStateMachine.DStateMachine<EmployeeRequestAction, BoardProposalStatus>(
             requestEntity.Status);
 
-        ConfigureStateMachine(stateMachine, hasAgendaItems, hasDecisions, hasTasks, requestEntity.MeetingDate);
+        ConfigureStateMachine(
+            stateMachine,
+            hasCompleteAgenda,
+            hasChairpersonAgenda,
+            hasDecisions,
+            hasExecutableTasks,
+            canClose,
+            requestEntity.MeetingDate);
 
         await stateMachine.TriggerAsync(request.Action);
 
@@ -81,9 +102,11 @@ public class NextBoardProposalStepRequestHandler
 
     private static void ConfigureStateMachine(
         DStateMachine.DStateMachine<EmployeeRequestAction, BoardProposalStatus> stateMachine,
-        bool hasAgendaItems,
+        bool hasCompleteAgenda,
+        bool hasChairpersonAgenda,
         bool hasDecisions,
-        bool hasTasks,
+        bool hasExecutableTasks,
+        bool canClose,
         DateTime meetingDate)
     {
         stateMachine.ForState(BoardProposalStatus.Draft)
@@ -91,15 +114,29 @@ public class NextBoardProposalStepRequestHandler
                 t.ChangeState(BoardProposalStatus.AgendaPreparation));
 
         stateMachine.ForState(BoardProposalStatus.AgendaPreparation)
-            .OnTrigger(EmployeeRequestAction.MoveNext, t =>
-                t.ChangeState(BoardProposalStatus.MaterialsPreparation)
-                    .If(() => hasAgendaItems));
+            .OnTrigger(EmployeeRequestAction.Submit, t =>
+                t.ChangeState(BoardProposalStatus.SecretaryReview)
+                    .If(() => hasCompleteAgenda));
 
-        stateMachine.ForState(BoardProposalStatus.MaterialsPreparation)
-            .OnTrigger(EmployeeRequestAction.MoveNext, t =>
-                t.ChangeState(BoardProposalStatus.ReadyForReview));
+        stateMachine.ForState(BoardProposalStatus.SecretaryReview)
+            .OnTrigger(EmployeeRequestAction.Approve, t =>
+                t.ChangeState(BoardProposalStatus.ChairpersonReview)
+                    .If(() => hasCompleteAgenda))
+            .OnTrigger(EmployeeRequestAction.Return, t =>
+                t.ChangeState(BoardProposalStatus.AgendaPreparation))
+            .OnTrigger(EmployeeRequestAction.Reject, t =>
+                t.ChangeState(BoardProposalStatus.Cancelled));
 
-        stateMachine.ForState(BoardProposalStatus.ReadyForReview)
+        stateMachine.ForState(BoardProposalStatus.ChairpersonReview)
+            .OnTrigger(EmployeeRequestAction.Approve, t =>
+                t.ChangeState(BoardProposalStatus.ReadyForSending)
+                    .If(() => hasChairpersonAgenda))
+            .OnTrigger(EmployeeRequestAction.Return, t =>
+                t.ChangeState(BoardProposalStatus.SecretaryReview))
+            .OnTrigger(EmployeeRequestAction.Reject, t =>
+                t.ChangeState(BoardProposalStatus.Cancelled));
+
+        stateMachine.ForState(BoardProposalStatus.ReadyForSending)
             .OnTrigger(EmployeeRequestAction.Send, t =>
                 t.ChangeState(BoardProposalStatus.Sent));
 
@@ -109,34 +146,35 @@ public class NextBoardProposalStepRequestHandler
                     .If(() => meetingDate <= DateTime.UtcNow));
 
         stateMachine.ForState(BoardProposalStatus.Held)
-            .OnTrigger(EmployeeRequestAction.RegisterDecisions, t =>
-                t.ChangeState(BoardProposalStatus.DecisionsRegistration));
+            .OnTrigger(EmployeeRequestAction.StartDecisionRegistration, t =>
+                t.ChangeState(BoardProposalStatus.DecisionsAndTasks));
 
-        stateMachine.ForState(BoardProposalStatus.DecisionsRegistration)
+        stateMachine.ForState(BoardProposalStatus.DecisionsAndTasks)
             .OnTrigger(EmployeeRequestAction.StartMonitoring, t =>
-                t.ChangeState(BoardProposalStatus.TaskMonitoring)
-                    .If(() => hasDecisions));
+                t.ChangeState(BoardProposalStatus.DeadlineMonitoring)
+                    .If(() => hasDecisions && hasExecutableTasks));
 
-        stateMachine.ForState(BoardProposalStatus.TaskMonitoring)
+        stateMachine.ForState(BoardProposalStatus.DeadlineMonitoring)
             .OnTrigger(EmployeeRequestAction.Close, t =>
                 t.ChangeState(BoardProposalStatus.Closed)
-                    .If(() => hasDecisions && hasTasks));
+                    .If(() => canClose));
 
         stateMachine.ForStates(
                 BoardProposalStatus.Draft,
                 BoardProposalStatus.AgendaPreparation,
-                BoardProposalStatus.MaterialsPreparation,
-                BoardProposalStatus.ReadyForReview,
+                BoardProposalStatus.SecretaryReview,
+                BoardProposalStatus.ChairpersonReview,
+                BoardProposalStatus.ReadyForSending,
                 BoardProposalStatus.Sent,
                 BoardProposalStatus.Held,
-                BoardProposalStatus.DecisionsRegistration,
-                BoardProposalStatus.TaskMonitoring)
+                BoardProposalStatus.DecisionsAndTasks,
+                BoardProposalStatus.DeadlineMonitoring)
             .OnTrigger(EmployeeRequestAction.Cancel, t =>
                 t.ChangeState(BoardProposalStatus.Cancelled));
 
         stateMachine.ForState(BoardProposalStatus.Closed)
             .OnTrigger(EmployeeRequestAction.Reopen, t =>
-                t.ChangeState(BoardProposalStatus.TaskMonitoring));
+                t.ChangeState(BoardProposalStatus.DeadlineMonitoring));
 
         stateMachine.OnUnhandledTrigger((trigger, machine) =>
         {
@@ -164,4 +202,192 @@ public class NextBoardProposalStepRequestHandler
                 break;
         }
     }
+
+    private static void ValidateTransitionRequirements(
+        BoardProposalRequest requestEntity,
+        IReadOnlyCollection<Attachment> attachments,
+        EmployeeRequestAction action)
+    {
+        var errors = new List<ValidationFailure>();
+
+        switch (requestEntity.Status, action)
+        {
+            case (BoardProposalStatus.AgendaPreparation, EmployeeRequestAction.Submit):
+            case (BoardProposalStatus.SecretaryReview, EmployeeRequestAction.Approve):
+                AddAgendaValidationErrors(requestEntity, attachments, errors);
+                break;
+
+            case (BoardProposalStatus.ChairpersonReview, EmployeeRequestAction.Approve):
+                if (!HasChairpersonAgenda(requestEntity))
+                {
+                    errors.Add(new ValidationFailure(
+                        nameof(BoardProposalAgendaItem.Order),
+                        "Every agenda item must have agenda order before chairperson approval."));
+                }
+
+                break;
+
+            case (BoardProposalStatus.Sent, EmployeeRequestAction.MarkHeld):
+                if (requestEntity.MeetingDate > DateTime.UtcNow)
+                {
+                    errors.Add(new ValidationFailure(
+                        nameof(BoardProposalRequest.MeetingDate),
+                        "The meeting cannot be marked as held before the meeting date."));
+                }
+
+                break;
+
+            case (BoardProposalStatus.DecisionsAndTasks, EmployeeRequestAction.StartMonitoring):
+                if (!HasDecisions(requestEntity))
+                {
+                    errors.Add(new ValidationFailure(
+                        nameof(BoardProposalAgendaItem.DecisionStatus),
+                        "Every agenda item must have a final decision before monitoring can start."));
+                }
+
+                if (!HasExecutableTasks(requestEntity))
+                {
+                    errors.Add(new ValidationFailure(
+                        nameof(BoardProposalTask),
+                        "Every approved agenda item must have at least one follow-up task before monitoring can start."));
+                }
+
+                break;
+
+            case (BoardProposalStatus.DeadlineMonitoring, EmployeeRequestAction.Close):
+                if (!CanClose(requestEntity))
+                {
+                    errors.Add(new ValidationFailure(
+                        nameof(BoardProposalTask.Status),
+                        "All required tasks must be completed, cancelled, or marked not applicable before closing."));
+                }
+
+                break;
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ModelValidationException(errors);
+        }
+    }
+
+    private static void AddAgendaValidationErrors(
+        BoardProposalRequest requestEntity,
+        IReadOnlyCollection<Attachment> attachments,
+        ICollection<ValidationFailure> errors)
+    {
+        if (requestEntity.AgendaItems.Count == 0)
+        {
+            errors.Add(new ValidationFailure(
+                nameof(BoardProposalRequest.AgendaItems),
+                "At least one agenda item is required before submitting for secretary review."));
+            return;
+        }
+
+        foreach (var agendaItem in requestEntity.AgendaItems.OrderBy(x => x.Order))
+        {
+            var itemName = string.IsNullOrWhiteSpace(agendaItem.Title)
+                ? $"Agenda item #{agendaItem.Id}"
+                : agendaItem.Title;
+
+            if (string.IsNullOrWhiteSpace(agendaItem.Title))
+            {
+                errors.Add(new ValidationFailure(
+                    nameof(BoardProposalAgendaItem.Title),
+                    $"{itemName}: title is required."));
+            }
+
+            if (string.IsNullOrWhiteSpace(agendaItem.InitiatorEmployeeId))
+            {
+                errors.Add(new ValidationFailure(
+                    nameof(BoardProposalAgendaItem.InitiatorEmployeeId),
+                    $"{itemName}: initiator is required."));
+            }
+
+            if (string.IsNullOrWhiteSpace(agendaItem.ResponsibleBoardMemberEmployeeId))
+            {
+                errors.Add(new ValidationFailure(
+                    nameof(BoardProposalAgendaItem.ResponsibleBoardMemberEmployeeId),
+                    $"{itemName}: responsible board member is required."));
+            }
+
+            if (string.IsNullOrWhiteSpace(agendaItem.PresenterEmployeeId))
+            {
+                errors.Add(new ValidationFailure(
+                    nameof(BoardProposalAgendaItem.PresenterEmployeeId),
+                    $"{itemName}: presenter is required."));
+            }
+
+            if (string.IsNullOrWhiteSpace(agendaItem.Category))
+            {
+                errors.Add(new ValidationFailure(
+                    nameof(BoardProposalAgendaItem.Category),
+                    $"{itemName}: category is required."));
+            }
+
+            if (agendaItem.Order <= 0)
+            {
+                errors.Add(new ValidationFailure(
+                    nameof(BoardProposalAgendaItem.Order),
+                    $"{itemName}: agenda order is required."));
+            }
+
+            if (!HasMaterial(agendaItem, attachments))
+            {
+                errors.Add(new ValidationFailure(
+                    nameof(Attachment),
+                    $"{itemName}: at least one material attachment is required."));
+            }
+        }
+    }
+
+    private static bool HasCompleteAgenda(
+        BoardProposalRequest requestEntity,
+        IReadOnlyCollection<Attachment> attachments)
+    {
+        if (requestEntity.AgendaItems.Count == 0)
+        {
+            return false;
+        }
+
+        return requestEntity.AgendaItems.All(agendaItem =>
+            !string.IsNullOrWhiteSpace(agendaItem.Title)
+            && !string.IsNullOrWhiteSpace(agendaItem.InitiatorEmployeeId)
+            && !string.IsNullOrWhiteSpace(agendaItem.ResponsibleBoardMemberEmployeeId)
+            && !string.IsNullOrWhiteSpace(agendaItem.PresenterEmployeeId)
+            && !string.IsNullOrWhiteSpace(agendaItem.Category)
+            && agendaItem.Order > 0
+            && HasMaterial(agendaItem, attachments));
+    }
+
+    private static bool HasChairpersonAgenda(BoardProposalRequest requestEntity)
+        => requestEntity.AgendaItems.Count > 0
+            && requestEntity.AgendaItems.All(x => x.Order > 0);
+
+    private static bool HasDecisions(BoardProposalRequest requestEntity)
+        => requestEntity.AgendaItems.Count > 0
+            && requestEntity.AgendaItems.All(x => x.DecisionStatus.HasValue);
+
+    private static bool HasExecutableTasks(BoardProposalRequest requestEntity)
+        => requestEntity.AgendaItems
+            .Where(x => x.DecisionStatus == BoardProposalDecisionStatus.Approved)
+            .All(x => x.Tasks.Count > 0);
+
+    private static bool CanClose(BoardProposalRequest requestEntity)
+    {
+        var tasks = requestEntity.AgendaItems.SelectMany(x => x.Tasks).ToList();
+
+        return tasks.All(task =>
+            task.Status is BoardProposalTaskStatus.Completed
+                or BoardProposalTaskStatus.Cancelled
+                or BoardProposalTaskStatus.NotApplicable);
+    }
+
+    private static bool HasMaterial(
+        BoardProposalAgendaItem agendaItem,
+        IReadOnlyCollection<Attachment> attachments)
+        => attachments.Any(attachment =>
+            string.Equals(attachment.Section, "AgendaItem", StringComparison.OrdinalIgnoreCase)
+            && attachment.SectionEntityId == agendaItem.Id);
+
 }

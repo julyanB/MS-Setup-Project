@@ -1,4 +1,5 @@
-﻿using EmployeeManagementService.Domain.Models.BoardProposal;
+﻿using EmployeeManagementService.Domain.Enums.BoardProposal;
+using EmployeeManagementService.Domain.Models.BoardProposal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,8 +26,9 @@ public class BoardProposalTaskConfiguration : IEntityTypeConfiguration<BoardProp
 
         builder.Property(x => x.Status)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(64)
-            .HasDefaultValue("ToDo");
+            .HasDefaultValue(BoardProposalTaskStatus.ToDo);
 
         builder.Property(x => x.Order)
             .IsRequired();

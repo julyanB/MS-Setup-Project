@@ -1,4 +1,5 @@
 ﻿using EmployeeManagementService.Domain.Common;
+using EmployeeManagementService.Domain.Enums.BoardProposal;
 
 namespace EmployeeManagementService.Domain.Models.BoardProposal;
 
@@ -22,7 +23,7 @@ public sealed class BoardProposalAgendaItem : Auditable<int>
 
     public int Order { get; set; }
 
-    public string? DecisionStatus { get; set; }
+    public BoardProposalDecisionStatus? DecisionStatus { get; set; }
 
     public string? DecisionText { get; set; }
 

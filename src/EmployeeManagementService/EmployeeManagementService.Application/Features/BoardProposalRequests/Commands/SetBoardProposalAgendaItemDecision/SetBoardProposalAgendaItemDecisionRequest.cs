@@ -1,10 +1,12 @@
+﻿using EmployeeManagementService.Domain.Enums.BoardProposal;
+
 namespace EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.SetBoardProposalAgendaItemDecision;
 
 public class SetBoardProposalAgendaItemDecisionRequest
 {
     public int AgendaItemId { get; set; }
 
-    public string DecisionStatus { get; set; } = null!;
+    public BoardProposalDecisionStatus DecisionStatus { get; set; }
 
     public string DecisionText { get; set; } = null!;
 

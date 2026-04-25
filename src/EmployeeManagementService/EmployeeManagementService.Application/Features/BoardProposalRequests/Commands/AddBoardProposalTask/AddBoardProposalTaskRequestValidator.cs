@@ -10,6 +10,6 @@ public class AddBoardProposalTaskRequestValidator : AbstractValidator<AddBoardPr
         RuleFor(x => x.Title).NotEmpty().MaximumLength(512);
         RuleFor(x => x.ResponsibleEmployeeId).NotEmpty().MaximumLength(450);
         RuleFor(x => x.DueDate).NotEmpty();
-        RuleFor(x => x.Status).NotEmpty().MaximumLength(64);
+        RuleFor(x => x.Status).IsInEnum();
     }
 }

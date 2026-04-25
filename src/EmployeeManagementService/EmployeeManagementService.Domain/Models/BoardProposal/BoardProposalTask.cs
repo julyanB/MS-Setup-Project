@@ -1,4 +1,5 @@
 ﻿using EmployeeManagementService.Domain.Common;
+using EmployeeManagementService.Domain.Enums.BoardProposal;
 
 namespace EmployeeManagementService.Domain.Models.BoardProposal;
 
@@ -18,7 +19,7 @@ public sealed class BoardProposalTask : Auditable<int>
 
     public int Order { get; set; }
 
-    public string Status { get; set; } = null!;
+    public BoardProposalTaskStatus Status { get; set; }
 
     public DateTime? ExtendedDueDate { get; set; }
 
