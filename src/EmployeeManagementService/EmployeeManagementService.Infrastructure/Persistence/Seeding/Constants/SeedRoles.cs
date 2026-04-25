@@ -3,12 +3,11 @@
 public static class SeedRoles
 {
     // BoardProposal
-    public const string BoardProposal_Admin = "BoardProposalAdmin";
-    public const string BoardProposal_Secretary = "BoardProposalSecretary";
-    public const string BoardProposal_Chairperson = "BoardProposalChairperson";
+    public const string BoardProposal_SecretaryAdmin = "BoardProposalSecretaryAdmin";
     public const string BoardProposal_BoardMember = "BoardProposalBoardMember";
-    public const string BoardProposal_Initiator = "BoardProposalInitiator";
     public const string BoardProposal_TaskOwner = "BoardProposalTaskOwner";
+    public const string BoardProposal_UserObserver = "BoardProposalUserObserver";
+    public const string BoardProposal_AuditObserver = "BoardProposalAuditObserver";
 
     public static readonly string[] All =
         typeof(SeedRoles)
