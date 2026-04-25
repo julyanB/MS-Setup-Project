@@ -1,34 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useUser } from "@/contexts/UserContext";
-
-type RequestRow = {
-  number: string;
-  type: string;
-  modified: string;
-  status: string;
-  unseen?: boolean;
-};
-
-const rows: RequestRow[] = [
-  {
-    number: "MB000124",
-    type: "Board proposal request",
-    modified: "24.04.2026, 10:15",
-    status: "SecretaryReview",
-    unseen: true,
-  },
-  {
-    number: "MB000123",
-    type: "Board proposal request",
-    modified: "24.04.2026, 09:40",
-    status: "ReturnedForCorrection",
-  },
-];
+import { ApiError } from "@/lib/api";
+import {
+  RequestMetaDataItem,
+  SearchRequestMetaDataResponse,
+  parseBoardProposalMetaData,
+  requestMetaDataApi,
+} from "@/lib/requestMetaData";
 
 type RequestTab = {
   id: "role" | "mine" | "addressed" | "all" | "advanced";
@@ -37,12 +20,19 @@ type RequestTab = {
 };
 
 const tabs: RequestTab[] = [
-  { id: "role", label: "RoleRequest", count: 6839 },
-  { id: "mine", label: "My Request", count: 192 },
+  { id: "role", label: "RoleRequest" },
+  { id: "mine", label: "My Request" },
   { id: "addressed", label: "Addressed To Me", count: 7 },
-  { id: "all", label: "AllRequest", count: 358093 },
+  { id: "all", label: "AllRequest" },
   { id: "advanced", label: "Advanced search" },
 ] as const;
+
+const PAGE_SIZE = 20;
+const REQUEST_DEDUPE_MS = 1500;
+const requestMetaDataInFlight = new Map<
+  string,
+  { startedAt: number; promise: Promise<SearchRequestMetaDataResponse> }
+>();
 
 export default function RequestsPage() {
   return (
@@ -54,6 +44,7 @@ export default function RequestsPage() {
 
 function RequestsContent() {
   const { user } = useUser();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab") as RequestTab["id"] | null;
   const initialTab = tabs.some((tab) => tab.id === requestedTab)
@@ -61,22 +52,101 @@ function RequestsContent() {
     : "role";
   const [activeTab, setActiveTab] = useState<RequestTab["id"]>(initialTab);
   const [onlyUnseen, setOnlyUnseen] = useState(false);
-  const [typeFilter, setTypeFilter] = useState(
-    searchParams.get("type") === "board" ? "Board proposal request" : "All",
-  );
   const [statusFilter, setStatusFilter] = useState("All");
-  const accountName = user?.email?.split("@")[0] ?? "My account";
+  const [metaItems, setMetaItems] = useState<RequestMetaDataItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [metaLoading, setMetaLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const loadMetaData = useCallback(async () => {
+    const requestKey = JSON.stringify({
+      page,
+      pageSize: PAGE_SIZE,
+      requestType: "BoardProposalRequest",
+    });
+    const now = Date.now();
+    const existing = requestMetaDataInFlight.get(requestKey);
+    const promise =
+      existing && now - existing.startedAt < REQUEST_DEDUPE_MS
+        ? existing.promise
+        : requestMetaDataApi.search({
+            page,
+            pageSize: PAGE_SIZE,
+            requestType: "BoardProposalRequest",
+          });
 
-  const filteredRows = useMemo(
+    if (!existing || now - existing.startedAt >= REQUEST_DEDUPE_MS) {
+      requestMetaDataInFlight.set(requestKey, {
+        startedAt: now,
+        promise,
+      });
+    }
+
+    setMetaLoading(true);
+    setLoadError(null);
+    try {
+      const response = await promise;
+      setMetaItems(response.items);
+      setTotalCount(response.totalCount);
+    } catch (caught) {
+      setLoadError(
+        caught instanceof ApiError
+          ? caught.message
+          : "Could not load requests from core service",
+      );
+      setMetaItems([]);
+      setTotalCount(0);
+    } finally {
+      setMetaLoading(false);
+      window.setTimeout(() => {
+        if (requestMetaDataInFlight.get(requestKey)?.promise === promise) {
+          requestMetaDataInFlight.delete(requestKey);
+        }
+      }, REQUEST_DEDUPE_MS);
+    }
+  }, [page]);
+
+  const showsMetaTable = activeTab === "role" || activeTab === "mine" || activeTab === "all";
+
+  useEffect(() => {
+    if (!showsMetaTable) return;
+    void loadMetaData();
+  }, [loadMetaData, showsMetaTable]);
+
+  useEffect(() => {
+    // Reset to first page whenever filters change.
+    setPage(1);
+  }, [activeTab, onlyUnseen, statusFilter]);
+
+  const filteredMetaItems = useMemo(
     () =>
-      rows.filter((row) => {
-        if (onlyUnseen && !row.unseen) return false;
-        if (typeFilter !== "All" && row.type !== typeFilter) return false;
-        if (statusFilter !== "All" && row.status !== statusFilter) return false;
+      metaItems.filter((item) => {
+        if (statusFilter !== "All" && item.status !== statusFilter) {
+          return false;
+        }
+        if (onlyUnseen && item.seen) return false;
+        if (activeTab === "mine" && item.createdBy !== user?.email) return false;
         return true;
       }),
-    [onlyUnseen, typeFilter, statusFilter],
+    [activeTab, metaItems, onlyUnseen, statusFilter, user?.email],
   );
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  async function openRequest(item: RequestMetaDataItem) {
+    try {
+      if (!item.seen) {
+        await requestMetaDataApi.markSeen(item.requestType, item.id);
+      }
+      router.push(`/requests/board-proposals/${item.id}`);
+    } catch (caught) {
+      setLoadError(
+        caught instanceof ApiError
+          ? caught.message
+          : "Could not open request",
+      );
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -87,8 +157,9 @@ function RequestsContent() {
           </p>
           <h1 className="display mt-2 text-3xl font-bold">Request workbench</h1>
           <p className="mt-1 max-w-2xl text-sm text-white/55">
-            Role queues, personal requests, assigned requests, filters, and
-            board proposal intake in one place.
+            {showsMetaTable
+              ? "Requests are projected from the core service request-metadata table via Kafka."
+              : "Board proposal requests created from this browser are listed here and open into the test workflow page."}
           </p>
         </div>
         <Link href="/requests/board-proposals/new" className="btn-primary">
@@ -97,47 +168,57 @@ function RequestsContent() {
       </header>
 
       <section className="grid gap-3 lg:grid-cols-5">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`relative rounded-2xl border px-4 py-5 text-center transition ${
-              activeTab === tab.id
-                ? "border-fuchsia-200/45 bg-fuchsia-300/20 text-white"
-                : "border-white/10 bg-white/[0.06] text-white/70 hover:bg-white/[0.12]"
-            }`}
-          >
-            {tab.count !== undefined && (
-              <span className="absolute -right-2 -top-2 rounded-full bg-rose-400 px-2 py-0.5 text-[11px] font-bold text-white">
-                {tab.count}
+        {tabs.map((tab) => {
+          const count =
+            tab.id === "role" || tab.id === "all"
+              ? totalCount
+              : tab.id === "mine"
+                ? activeTab === "mine"
+                  ? totalCount
+                  : undefined
+                : tab.count;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative rounded-2xl border px-4 py-5 text-center transition ${
+                activeTab === tab.id
+                  ? "border-fuchsia-200/45 bg-fuchsia-300/20 text-white"
+                  : "border-white/10 bg-white/[0.06] text-white/70 hover:bg-white/[0.12]"
+              }`}
+            >
+              {count !== undefined && (
+                <span className="absolute -right-2 -top-2 rounded-full bg-rose-400 px-2 py-0.5 text-[11px] font-bold text-white">
+                  {count}
+                </span>
+              )}
+              <span className="display block text-sm font-semibold">
+                {tab.label}
               </span>
-            )}
-            <span className="display block text-sm font-semibold">
-              {tab.label}
-            </span>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </section>
 
       <section className="gls rounded-2xl p-5">
+        {loadError && (
+          <div className="mb-4 rounded-2xl border border-rose-300/30 bg-rose-400/10 p-3 text-sm text-rose-100">
+            {loadError}
+          </div>
+        )}
+
         <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label className="label">Visible columns</label>
               <select className="field" defaultValue="4">
                 <option value="4">4 selected</option>
-                <option value="5">5 selected</option>
               </select>
             </div>
             <div>
               <label className="label">Request type</label>
-              <select
-                className="field"
-                value={typeFilter}
-                onChange={(event) => setTypeFilter(event.target.value)}
-              >
-                <option>All</option>
+              <select className="field" value="Board proposal request" disabled>
                 <option>Board proposal request</option>
               </select>
             </div>
@@ -149,8 +230,16 @@ function RequestsContent() {
                 onChange={(event) => setStatusFilter(event.target.value)}
               >
                 <option>All</option>
-                <option>SecretaryReview</option>
-                <option>ReturnedForCorrection</option>
+                <option>Draft</option>
+                <option>AgendaPreparation</option>
+                <option>MaterialsPreparation</option>
+                <option>ReadyForReview</option>
+                <option>Sent</option>
+                <option>Held</option>
+                <option>DecisionsRegistration</option>
+                <option>TaskMonitoring</option>
+                <option>Closed</option>
+                <option>Cancelled</option>
               </select>
             </div>
           </div>
@@ -166,71 +255,152 @@ function RequestsContent() {
           </label>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
-          <table className="w-full border-collapse text-left text-sm">
-            <thead className="bg-black/45 text-xs uppercase tracking-wider text-white/55">
-              <tr>
-                <th className="px-4 py-3">Number</th>
-                <th className="px-4 py-3">Request type</th>
-                <th className="px-4 py-3">Modified date</th>
-                <th className="px-4 py-3">Request status</th>
-                <th className="px-4 py-3">Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.map((row) => (
-                <tr
-                  key={row.number}
-                  className="border-t border-white/10 bg-white/[0.03] transition hover:bg-white/[0.1]"
-                >
-                  <td className="px-4 py-3 font-mono text-xs text-white/85">
-                    <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-orange-300 opacity-0 data-[on=true]:opacity-100" data-on={row.unseen ? "true" : "false"} />
-                    {row.number}
-                  </td>
-                  <td className="px-4 py-3 font-semibold">{row.type}</td>
-                  <td className="px-4 py-3 text-white/70">{row.modified}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={row.status} />
-                  </td>
-                  <td className="px-4 py-3 text-white/70">{accountName}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 text-sm text-white/55">
-          <span>Showing 1 - {filteredRows.length} of 6839 results</span>
-          <div className="flex items-center gap-2">
-            {[1, 2, 3, 4, 5, 6].map((page) => (
-              <button
-                key={page}
-                type="button"
-                className={`grid h-9 w-9 place-items-center rounded-xl border ${
-                  page === 1
-                    ? "border-sky-200/40 bg-sky-300/25 text-white"
-                    : "border-white/10 bg-white/[0.05] text-white/60"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-        </div>
+        {showsMetaTable ? (
+          <MetaTable
+            items={filteredMetaItems}
+            loading={metaLoading}
+            page={page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPrev={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onOpen={openRequest}
+          />
+        ) : (
+          <MetaTable
+            items={filteredMetaItems}
+            loading={metaLoading}
+            page={page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPrev={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onOpen={openRequest}
+          />
+        )}
       </section>
     </div>
   );
 }
 
+function MetaTable({
+  items,
+  loading,
+  page,
+  totalPages,
+  totalCount,
+  onPrev,
+  onNext,
+  onOpen,
+}: {
+  items: RequestMetaDataItem[];
+  loading: boolean;
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onOpen: (item: RequestMetaDataItem) => void;
+}) {
+  return (
+    <>
+      <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+        <table className="w-full border-collapse text-left text-sm">
+          <thead className="bg-black/45 text-xs uppercase tracking-wider text-white/55">
+            <tr>
+              <th className="px-4 py-3">Number</th>
+              <th className="px-4 py-3">Request type</th>
+              <th className="px-4 py-3">Meeting date</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Owner</th>
+              <th className="px-4 py-3">Updated</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              const meta = parseBoardProposalMetaData(item.additionalJsonData);
+              return (
+                <tr
+                  key={`${item.requestType}-${item.id}`}
+                  onClick={() => onOpen(item)}
+                  className={`cursor-pointer border-t border-white/10 transition hover:bg-white/[0.1] ${
+                    item.seen ? "bg-white/[0.03]" : "bg-orange-400/10"
+                  }`}
+                >
+                  <td className="px-4 py-3 font-mono text-xs text-white/85">
+                    <span className="inline-flex items-center gap-3">
+                      {!item.seen && (
+                        <span className="h-2 w-2 rounded-full bg-orange-500" />
+                      )}
+                      <span className="underline decoration-white/20 underline-offset-4">
+                        {meta?.meetingCode ?? `#${item.id}`}
+                      </span>
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold">{item.requestType}</td>
+                  <td className="px-4 py-3 text-white/70">
+                    {meta?.meetingDate
+                      ? new Date(meta.meetingDate).toLocaleString()
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={item.status} />
+                  </td>
+                  <td className="px-4 py-3 text-white/70">{item.createdBy}</td>
+                  <td className="px-4 py-3 text-xs text-white/55">
+                    {new Date(item.updatedAt).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3" />
+                </tr>
+              );
+            })}
+            {items.length === 0 && (
+              <tr>
+                <td className="px-4 py-8 text-center text-white/50" colSpan={7}>
+                  {loading ? "Loading..." : "No requests match these filters."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-4 flex items-center justify-between text-xs text-white/60">
+        <span>
+          {totalCount === 0
+            ? "0 results"
+            : `Page ${page} of ${totalPages} - ${totalCount} total`}
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={page <= 1 || loading}
+            className="btn-ghost text-xs disabled:opacity-40"
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={page >= totalPages || loading}
+            className="btn-ghost text-xs disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function StatusBadge({ status }: { status: string }) {
   const palette =
-    status === "SecretaryReview"
-      ? "border-amber-300/30 bg-amber-400/10 text-amber-100"
-      : status === "ReturnedForCorrection"
-        ? "border-orange-300/30 bg-orange-400/10 text-orange-100"
-        : status === "Expired"
-          ? "border-rose-300/30 bg-rose-400/10 text-rose-100"
-          : "border-sky-300/30 bg-sky-400/10 text-sky-100";
+    status === "Closed"
+      ? "border-emerald-300/30 bg-emerald-400/10 text-emerald-100"
+      : status === "Cancelled"
+        ? "border-rose-300/30 bg-rose-400/10 text-rose-100"
+        : "border-sky-300/30 bg-sky-400/10 text-sky-100";
 
   return <span className={`chip ${palette}`}>{status}</span>;
 }
