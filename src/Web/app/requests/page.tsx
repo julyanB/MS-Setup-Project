@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -9,25 +8,25 @@ import { ApiError } from "@/lib/api";
 import {
   RequestMetaDataItem,
   SearchRequestMetaDataResponse,
-  parseBoardProposalMetaData,
   requestMetaDataApi,
 } from "@/lib/requestMetaData";
 
 type RequestTab = {
-  id: "role" | "mine" | "addressed" | "all" | "advanced";
+  id: "role" | "mine" | "addressed" | "all";
   label: string;
-  count?: number;
 };
 
 const tabs: RequestTab[] = [
   { id: "role", label: "RoleRequest" },
   { id: "mine", label: "My Request" },
-  { id: "addressed", label: "Addressed To Me", count: 7 },
+  { id: "addressed", label: "Addressed To Me" },
   { id: "all", label: "AllRequest" },
-  { id: "advanced", label: "Advanced search" },
 ] as const;
 
-const PAGE_SIZE = 20;
+type CountableTabId = RequestTab["id"];
+type TabCounts = Partial<Record<CountableTabId, number>>;
+
+const PAGE_SIZE = 10;
 const REQUEST_DEDUPE_MS = 1500;
 const requestMetaDataInFlight = new Map<
   string,
@@ -58,11 +57,80 @@ function RequestsContent() {
   const [page, setPage] = useState(1);
   const [metaLoading, setMetaLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [tabCounts, setTabCounts] = useState<TabCounts>({});
+
+  const loadTabCounts = useCallback(async () => {
+    const userIdentifier = user?.email ?? user?.id ?? undefined;
+    const tabQueries: { id: CountableTabId; query: Parameters<typeof requestMetaDataApi.search>[0] }[] = [
+      {
+        id: "role",
+        query: {
+          page: 1,
+          pageSize: 1,
+          requestType: "BoardProposalRequest",
+          assignedToMyRole: true,
+        },
+      },
+      {
+        id: "mine",
+        query: {
+          page: 1,
+          pageSize: 1,
+          requestType: "BoardProposalRequest",
+          createdBy: userIdentifier,
+        },
+      },
+      {
+        id: "addressed",
+        query: {
+          page: 1,
+          pageSize: 1,
+          requestType: "BoardProposalRequest",
+          assignedToMe: true,
+        },
+      },
+      {
+        id: "all",
+        query: {
+          page: 1,
+          pageSize: 1,
+          requestType: "BoardProposalRequest",
+        },
+      },
+    ];
+
+    const results = await Promise.all(
+      tabQueries.map(async ({ id, query }) => {
+        try {
+          const response = await requestMetaDataApi.search(query);
+          return [id, response.totalCount] as const;
+        } catch {
+          return [id, undefined] as const;
+        }
+      }),
+    );
+
+    const next: TabCounts = {};
+    for (const [id, count] of results) {
+      if (count !== undefined) next[id] = count;
+    }
+    setTabCounts(next);
+  }, [user?.email, user?.id]);
   const loadMetaData = useCallback(async () => {
+    const serverStatus = statusFilter === "All" ? undefined : statusFilter;
+    const createdBy =
+      activeTab === "mine" ? (user?.email ?? user?.id ?? undefined) : undefined;
+    const assignedToMe = activeTab === "addressed";
+    const assignedToMyRole = activeTab === "role";
     const requestKey = JSON.stringify({
       page,
       pageSize: PAGE_SIZE,
       requestType: "BoardProposalRequest",
+      status: serverStatus,
+      onlyUnseen,
+      createdBy,
+      assignedToMe,
+      assignedToMyRole,
     });
     const now = Date.now();
     const existing = requestMetaDataInFlight.get(requestKey);
@@ -73,6 +141,11 @@ function RequestsContent() {
             page,
             pageSize: PAGE_SIZE,
             requestType: "BoardProposalRequest",
+            status: serverStatus,
+            onlyUnseen,
+            createdBy,
+            assignedToMe,
+            assignedToMyRole,
           });
 
     if (!existing || now - existing.startedAt >= REQUEST_DEDUPE_MS) {
@@ -104,14 +177,15 @@ function RequestsContent() {
         }
       }, REQUEST_DEDUPE_MS);
     }
-  }, [page]);
-
-  const showsMetaTable = activeTab === "role" || activeTab === "mine" || activeTab === "all";
+  }, [activeTab, onlyUnseen, page, statusFilter, user?.email, user?.id]);
 
   useEffect(() => {
-    if (!showsMetaTable) return;
     void loadMetaData();
-  }, [loadMetaData, showsMetaTable]);
+  }, [loadMetaData]);
+
+  useEffect(() => {
+    void loadTabCounts();
+  }, [loadTabCounts]);
 
   useEffect(() => {
     // Reset to first page whenever filters change.
@@ -119,16 +193,8 @@ function RequestsContent() {
   }, [activeTab, onlyUnseen, statusFilter]);
 
   const filteredMetaItems = useMemo(
-    () =>
-      metaItems.filter((item) => {
-        if (statusFilter !== "All" && item.status !== statusFilter) {
-          return false;
-        }
-        if (onlyUnseen && item.seen) return false;
-        if (activeTab === "mine" && item.createdBy !== user?.email) return false;
-        return true;
-      }),
-    [activeTab, metaItems, onlyUnseen, statusFilter, user?.email],
+    () => metaItems,
+    [metaItems],
   );
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -157,26 +223,14 @@ function RequestsContent() {
           </p>
           <h1 className="display mt-2 text-3xl font-bold">Request workbench</h1>
           <p className="mt-1 max-w-2xl text-sm text-white/55">
-            {showsMetaTable
-              ? "Requests are projected from the core service request-metadata table via Kafka."
-              : "Board proposal requests created from this browser are listed here and open into the test workflow page."}
+            Requests are projected from the core service request-metadata table via Kafka.
           </p>
         </div>
-        <Link href="/requests/board-proposals/new" className="btn-primary">
-          New board proposal
-        </Link>
       </header>
 
-      <section className="grid gap-3 lg:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {tabs.map((tab) => {
-          const count =
-            tab.id === "role" || tab.id === "all"
-              ? totalCount
-              : tab.id === "mine"
-                ? activeTab === "mine"
-                  ? totalCount
-                  : undefined
-                : tab.count;
+          const count = tabCounts[tab.id as CountableTabId];
           return (
             <button
               key={tab.id}
@@ -188,7 +242,7 @@ function RequestsContent() {
                   : "border-white/10 bg-white/[0.06] text-white/70 hover:bg-white/[0.12]"
               }`}
             >
-              {count !== undefined && (
+              {count !== undefined && count > 0 && (
                 <span className="absolute -right-2 -top-2 rounded-full bg-rose-400 px-2 py-0.5 text-[11px] font-bold text-white">
                   {count}
                 </span>
@@ -256,29 +310,16 @@ function RequestsContent() {
           </label>
         </div>
 
-        {showsMetaTable ? (
-          <MetaTable
-            items={filteredMetaItems}
-            loading={metaLoading}
-            page={page}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            onPrev={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-            onOpen={openRequest}
-          />
-        ) : (
-          <MetaTable
-            items={filteredMetaItems}
-            loading={metaLoading}
-            page={page}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            onPrev={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-            onOpen={openRequest}
-          />
-        )}
+        <MetaTable
+          items={filteredMetaItems}
+          loading={metaLoading}
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPrev={() => setPage((p) => Math.max(1, p - 1))}
+          onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+          onOpen={openRequest}
+        />
       </section>
     </div>
   );
@@ -305,57 +346,52 @@ function MetaTable({
 }) {
   return (
     <>
-      <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+      <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="bg-black/45 text-xs uppercase tracking-wider text-white/55">
             <tr>
-              <th className="px-4 py-3">Number</th>
+              <th className="px-4 py-3">Request ID</th>
               <th className="px-4 py-3">Request type</th>
-              <th className="px-4 py-3">Meeting date</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Owner</th>
-              <th className="px-4 py-3">Updated</th>
-              <th className="px-4 py-3" />
+              <th className="px-4 py-3">Created by</th>
+              <th className="px-4 py-3">Modified by</th>
+              <th className="px-4 py-3">Created at</th>
+              <th className="px-4 py-3">Updated at</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => {
-              const meta = parseBoardProposalMetaData(item.additionalJsonData);
-              return (
-                <tr
-                  key={`${item.requestType}-${item.id}`}
-                  onClick={() => onOpen(item)}
-                  className={`cursor-pointer border-t border-white/10 transition hover:bg-white/[0.1] ${
-                    item.seen ? "bg-white/[0.03]" : "bg-orange-400/10"
-                  }`}
-                >
-                  <td className="px-4 py-3 font-mono text-xs text-white/85">
-                    <span className="inline-flex items-center gap-3">
-                      {!item.seen && (
-                        <span className="h-2 w-2 rounded-full bg-orange-500" />
-                      )}
-                      <span className="underline decoration-white/20 underline-offset-4">
-                        {meta?.meetingCode ?? `#${item.id}`}
-                      </span>
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-semibold">{item.requestType}</td>
-                  <td className="px-4 py-3 text-white/70">
-                    {meta?.meetingDate
-                      ? new Date(meta.meetingDate).toLocaleString()
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={item.status} />
-                  </td>
-                  <td className="px-4 py-3 text-white/70">{item.createdBy}</td>
-                  <td className="px-4 py-3 text-xs text-white/55">
-                    {new Date(item.updatedAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3" />
-                </tr>
-              );
-            })}
+            {items.map((item) => (
+              <tr
+                key={`${item.requestType}-${item.id}`}
+                onClick={() => onOpen(item)}
+                className={`cursor-pointer border-t border-white/10 transition hover:bg-white/[0.1] ${
+                  item.seen ? "bg-white/[0.03]" : "bg-orange-400/10"
+                }`}
+              >
+                <td className="px-4 py-3 font-mono text-xs text-white/75">
+                  <span className="inline-flex items-center gap-2">
+                    {!item.seen && (
+                      <span className="h-2 w-2 rounded-full bg-orange-500" />
+                    )}
+                    {item.vId ?? `#${item.id}`}
+                  </span>
+                </td>
+                <td className="px-4 py-3 font-semibold">
+                  {item.requestType}
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={item.status} />
+                </td>
+                <td className="px-4 py-3 text-white/75">{item.createdBy}</td>
+                <td className="px-4 py-3 text-white/75">{item.modifiedBy}</td>
+                <td className="px-4 py-3 text-xs text-white/55">
+                  {new Date(item.createdAt).toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-xs text-white/55">
+                  {new Date(item.updatedAt).toLocaleString()}
+                </td>
+              </tr>
+            ))}
             {items.length === 0 && (
               <tr>
                 <td className="px-4 py-8 text-center text-white/50" colSpan={7}>

@@ -2,6 +2,7 @@ import { api } from "./api";
 
 export type RequestMetaDataItem = {
   id: number;
+  vId: string;
   requestType: string;
   status: string;
   createdBy: string;
@@ -26,6 +27,8 @@ export type SearchRequestMetaDataParams = {
   status?: string;
   onlyUnseen?: boolean;
   createdBy?: string;
+  assignedToMe?: boolean;
+  assignedToMyRole?: boolean;
 };
 
 export type BoardProposalMetaData = {
@@ -46,6 +49,8 @@ export const requestMetaDataApi = {
     if (params.status) query.set("status", params.status);
     if (params.onlyUnseen) query.set("onlyUnseen", "true");
     if (params.createdBy) query.set("createdBy", params.createdBy);
+    if (params.assignedToMe) query.set("assignedToMe", "true");
+    if (params.assignedToMyRole) query.set("assignedToMyRole", "true");
 
     const qs = query.toString();
     return api.get<SearchRequestMetaDataResponse>(

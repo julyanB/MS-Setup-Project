@@ -24,28 +24,8 @@ export function SiteHeader() {
         </Link>
 
         <nav className="flex items-center gap-3 text-sm">
-          {status === "authenticated" && (
-            <>
-              <Link
-                href="/dashboard"
-                className="rounded-lg px-3 py-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
-              >
-                Home
-              </Link>
-              <Link
-                href="/requests"
-                className="rounded-lg px-3 py-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
-              >
-                Requests
-              </Link>
-            </>
-          )}
-
           {status === "authenticated" ? (
             <div className="flex items-center gap-3">
-              <button type="button" onClick={logout} className="btn-ghost">
-                Sign out
-              </button>
               <button
                 type="button"
                 onClick={() => setProfileOpen((open) => !open)}
@@ -92,7 +72,6 @@ export function SiteHeader() {
                 <h2 className="display mt-2 text-xl font-bold">
                   {displayName}
                 </h2>
-                <p className="text-sm text-white/55">Office staff - BG</p>
               </div>
               <button type="button" onClick={logout} className="btn-ghost px-3">
                 Sign out
@@ -104,16 +83,25 @@ export function SiteHeader() {
                 {initials}
               </div>
               <p className="mt-4 text-sm text-white/75">{user?.email}</p>
-              <span className="chip mt-3 border-white/20 bg-white/10">HQ</span>
             </div>
 
             <div className="mt-6">
-              <label className="label">Current role</label>
-              <select className="field">
-                <option>Office staff</option>
-                <option>Secretary</option>
-                <option>Chairperson</option>
-              </select>
+              <label className="label" htmlFor="my-roles-select">
+                My roles
+              </label>
+              {user?.roles && user.roles.length > 0 ? (
+                <select id="my-roles-select" className="field">
+                  {user.roles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="mt-2 text-sm text-white/55">
+                  No roles assigned.
+                </p>
+              )}
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">

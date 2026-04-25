@@ -90,6 +90,11 @@ export type AttachmentDetails = {
   createdAt: string;
 };
 
+export type RequestApprovalTargetDetails = {
+  targetType: "User" | "Role" | string;
+  targetValue: string;
+};
+
 export type BoardProposalRequestDetails = {
   id: number;
   meetingCode: string;
@@ -100,6 +105,7 @@ export type BoardProposalRequestDetails = {
   status: BoardProposalStatus;
   agendaItems: BoardProposalAgendaItemDetails[];
   attachments: AttachmentDetails[];
+  activeApprovalTargets: RequestApprovalTargetDetails[];
 };
 
 export const boardProposalApi = {

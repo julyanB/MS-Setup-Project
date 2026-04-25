@@ -268,6 +268,19 @@ function BoardProposalDetailsContent() {
     ? primaryActionByStatus[details.status]
     : undefined;
   const secondaryActions = getSecondaryActions(details?.status);
+  const isApprovalStatus =
+    details?.status === "SecretaryReview" || details?.status === "ChairpersonReview";
+  const isActiveApprover = Boolean(
+    details?.activeApprovalTargets?.some((target) =>
+      target.targetType === "User"
+        ? target.targetValue === user?.id
+        : user?.roles.includes(target.targetValue),
+    ),
+  );
+  const approvalBlockReason =
+    isApprovalStatus && !isActiveApprover
+      ? "This request is waiting for a different approval role or user."
+      : null;
   const currentStageIndex = details
     ? Math.max(
         0,
@@ -1246,7 +1259,11 @@ function BoardProposalDetailsContent() {
                 <button
                   type="button"
                   className="btn-primary"
-                  disabled={Boolean(working) || Boolean(primaryBlockReason)}
+                  disabled={
+                    Boolean(working) ||
+                    Boolean(primaryBlockReason) ||
+                    Boolean(approvalBlockReason)
+                  }
                   onClick={() =>
                     run(primaryAction.label, () =>
                       boardProposalApi.nextStep(id, primaryAction.action),
@@ -1265,6 +1282,11 @@ function BoardProposalDetailsContent() {
                   {primaryBlockReason}
                 </p>
               )}
+              {approvalBlockReason && (
+                <p className="rounded-2xl border border-amber-300/20 bg-amber-400/10 p-3 text-sm text-amber-50">
+                  {approvalBlockReason}
+                </p>
+              )}
               {secondaryActions.map((action) => (
                 <button
                   key={action.action}
@@ -1272,7 +1294,7 @@ function BoardProposalDetailsContent() {
                   className={`btn-ghost ${
                     action.tone === "danger" ? "text-rose-100" : ""
                   }`}
-                  disabled={Boolean(working)}
+                  disabled={Boolean(working) || Boolean(approvalBlockReason)}
                   onClick={() =>
                     run(action.label, () =>
                       boardProposalApi.nextStep(id, action.action),
