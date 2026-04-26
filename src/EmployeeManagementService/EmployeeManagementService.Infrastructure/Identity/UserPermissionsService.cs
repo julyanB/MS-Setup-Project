@@ -73,6 +73,52 @@ internal class UserPermissionsService : IUserPermissions
         return new UserSearchResult(items, page, pageSize, totalCount, totalPages);
     }
 
+    public async Task<IReadOnlyList<EmployeeLookupItem>> GetEmployees(
+        EmployeeLookupRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var limit = Math.Clamp(request.Limit, 1, 250);
+        var search = request.Search?.Trim();
+        var role = request.Role?.Trim();
+
+        var query = _userManager.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(role))
+        {
+            query = query
+                .Join(
+                    _db.UserRoles,
+                    user => user.Id,
+                    userRole => userRole.UserId,
+                    (user, userRole) => new { User = user, UserRole = userRole })
+                .Join(
+                    _db.Roles,
+                    joined => joined.UserRole.RoleId,
+                    identityRole => identityRole.Id,
+                    (joined, identityRole) => new { joined.User, Role = identityRole })
+                .Where(joined => joined.Role.Name == role)
+                .Select(joined => joined.User);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(user =>
+                (user.Email != null && user.Email.Contains(search)) ||
+                (user.UserName != null && user.UserName.Contains(search)) ||
+                user.Id.Contains(search));
+        }
+
+        return await query
+            .Distinct()
+            .OrderBy(user => user.Email ?? user.UserName ?? user.Id)
+            .Take(limit)
+            .Select(user => new EmployeeLookupItem(
+                user.Id,
+                user.Email,
+                user.UserName))
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<string>> GetPermissions(string userId, CancellationToken cancellationToken = default)
     {
         await GetUserOrThrow(userId); // validate user exists

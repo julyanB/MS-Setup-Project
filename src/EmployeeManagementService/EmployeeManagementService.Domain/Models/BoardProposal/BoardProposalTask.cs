@@ -1,4 +1,5 @@
-﻿using EmployeeManagementService.Domain.Common;
+﻿using System.ComponentModel;
+using EmployeeManagementService.Domain.Common;
 using EmployeeManagementService.Domain.Enums.BoardProposal;
 
 namespace EmployeeManagementService.Domain.Models.BoardProposal;
@@ -13,6 +14,7 @@ public sealed class BoardProposalTask : Auditable<int>
 
     public string? Description { get; set; }
 
+    [Description("UserId")]
     public string ResponsibleEmployeeId { get; set; } = null!;
 
     public DateTime DueDate { get; set; }

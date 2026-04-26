@@ -7,7 +7,13 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiError } from "@/lib/api";
 import { boardProposalApi, storeBoardProposalId } from "@/lib/boardProposals";
 import { DropDownOption, getDropDownOptions } from "@/lib/dropDowns";
-import { useUser } from "@/contexts/UserContext";
+import {
+  employeeApi,
+  employeeLabel,
+  type EmployeeLookupItem,
+} from "@/lib/employees";
+
+const BOARD_PROPOSAL_SECRETARY_ROLE = "BoardProposalSecretaryAdmin";
 
 export default function NewBoardProposalPage() {
   return (
@@ -19,25 +25,35 @@ export default function NewBoardProposalPage() {
 
 function NewBoardProposalContent() {
   const router = useRouter();
-  const { user } = useUser();
   const [meetingDate, setMeetingDate] = useState(
     new Date().toISOString().slice(0, 16),
   );
   const [meetingType, setMeetingType] = useState("Regular");
   const [meetingFormat, setMeetingFormat] = useState("InPerson");
-  const [secretaryEmployeeId, setSecretaryEmployeeId] = useState(
-    user?.email ?? "",
-  );
+  const [secretaryEmployeeId, setSecretaryEmployeeId] = useState("");
   const [meetingTypeOptions, setMeetingTypeOptions] = useState<DropDownOption[]>([]);
   const [meetingFormatOptions, setMeetingFormatOptions] = useState<DropDownOption[]>([]);
+  const [secretaryEmployees, setSecretaryEmployees] = useState<EmployeeLookupItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.email) {
-      setSecretaryEmployeeId((current) => current || user.email || "");
+    async function loadSecretaries() {
+      const employees = await employeeApi.lookup({
+        role: BOARD_PROPOSAL_SECRETARY_ROLE,
+        limit: 250,
+      });
+
+      setSecretaryEmployees(employees);
+      setSecretaryEmployeeId((current) =>
+        employees.some((employee) => employee.id === current)
+          ? current
+          : employees[0]?.id ?? "",
+      );
     }
-  }, [user?.email]);
+
+    void loadSecretaries();
+  }, []);
 
   useEffect(() => {
     async function loadDropDowns() {
@@ -118,12 +134,27 @@ function NewBoardProposalContent() {
             </div>
             <div>
               <label className="label">Secretary employee</label>
-              <input
+              <select
                 className="field"
                 value={secretaryEmployeeId}
                 onChange={(event) => setSecretaryEmployeeId(event.target.value)}
                 required
-              />
+              >
+                <option value="" disabled>
+                  Select secretary
+                </option>
+                {secretaryEmployees.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employeeLabel(employee)}
+                  </option>
+                ))}
+              </select>
+              {secretaryEmployees.length === 0 && (
+                <p className="mt-2 text-xs text-amber-100/80">
+                  No users have the BoardProposalSecretaryAdmin role. Assign it
+                  from the admin panel first.
+                </p>
+              )}
             </div>
             <div>
               <label className="label">Meeting type</label>

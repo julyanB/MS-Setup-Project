@@ -28,6 +28,14 @@ import {
   getDropDownLabel,
   getDropDownOptions,
 } from "@/lib/dropDowns";
+import {
+  employeeApi,
+  employeeLabel,
+  type EmployeeLookupItem,
+} from "@/lib/employees";
+
+const BOARD_PROPOSAL_BOARD_MEMBER_ROLE = "BoardProposalBoardMember";
+const BOARD_PROPOSAL_TASK_OWNER_ROLE = "BoardProposalTaskOwner";
 
 type Stage = {
   title: string;
@@ -204,6 +212,13 @@ function BoardProposalDetailsContent() {
   const [documentTypeOptions, setDocumentTypeOptions] = useState<
     DropDownOption[]
   >([]);
+  const [employees, setEmployees] = useState<EmployeeLookupItem[]>([]);
+  const [boardMemberEmployees, setBoardMemberEmployees] = useState<
+    EmployeeLookupItem[]
+  >([]);
+  const [taskOwnerEmployees, setTaskOwnerEmployees] = useState<
+    EmployeeLookupItem[]
+  >([]);
   const [agendaForm, setAgendaForm] = useState({
     title: "",
     initiatorEmployeeId: "",
@@ -299,21 +314,46 @@ function BoardProposalDetailsContent() {
   );
 
   useEffect(() => {
-    if (!user?.email) return;
-    setAgendaForm((current) => ({
-      ...current,
-      initiatorEmployeeId: current.initiatorEmployeeId || user.email || "",
-      presenterEmployeeId: current.presenterEmployeeId || user.email || "",
-    }));
-    setVoteForm((current) => ({
-      ...current,
-      boardMemberEmployeeId: current.boardMemberEmployeeId || user.email || "",
-    }));
-    setTaskForm((current) => ({
-      ...current,
-      responsibleEmployeeId: current.responsibleEmployeeId || user.email || "",
-    }));
-  }, [user?.email]);
+    async function loadEmployees() {
+      const [all, boardMembers, taskOwners] = await Promise.all([
+        employeeApi.lookup({ limit: 250 }),
+        employeeApi.lookup({
+          role: BOARD_PROPOSAL_BOARD_MEMBER_ROLE,
+          limit: 250,
+        }),
+        employeeApi.lookup({
+          role: BOARD_PROPOSAL_TASK_OWNER_ROLE,
+          limit: 250,
+        }),
+      ]);
+
+      setEmployees(all);
+      setBoardMemberEmployees(boardMembers);
+      setTaskOwnerEmployees(taskOwners);
+
+      setAgendaForm((current) => ({
+        ...current,
+        initiatorEmployeeId:
+          current.initiatorEmployeeId || user?.id || all[0]?.id || "",
+        presenterEmployeeId:
+          current.presenterEmployeeId || user?.id || all[0]?.id || "",
+        responsibleBoardMemberEmployeeId:
+          current.responsibleBoardMemberEmployeeId || boardMembers[0]?.id || "",
+      }));
+      setVoteForm((current) => ({
+        ...current,
+        boardMemberEmployeeId:
+          current.boardMemberEmployeeId || boardMembers[0]?.id || "",
+      }));
+      setTaskForm((current) => ({
+        ...current,
+        responsibleEmployeeId:
+          current.responsibleEmployeeId || taskOwners[0]?.id || all[0]?.id || "",
+      }));
+    }
+
+    void loadEmployees();
+  }, [user?.id]);
 
   useEffect(() => {
     async function loadDropDowns() {
@@ -684,8 +724,17 @@ function BoardProposalDetailsContent() {
                       {item.description || "No description."}
                     </p>
                     <div className="mt-3 grid gap-1 text-xs text-white/45">
-                      <span>Presenter: {item.presenterEmployeeId}</span>
-                      <span>Owner: {item.responsibleBoardMemberEmployeeId}</span>
+                      <span>
+                        Presenter: {getEmployeeDisplayName(item.presenterEmployeeId, employees)}
+                      </span>
+                      <span>
+                        Owner:{" "}
+                        {getEmployeeDisplayName(
+                          item.responsibleBoardMemberEmployeeId,
+                          boardMemberEmployees,
+                          employees,
+                        )}
+                      </span>
                       <span>
                         Decision:{" "}
                         {getDropDownLabel(decisionStatusOptions, item.decisionStatus) ||
@@ -726,13 +775,14 @@ function BoardProposalDetailsContent() {
                 </div>
                 <div>
                   <label className="label">Presenter employee</label>
-                  <input
-                    className="field"
+                  <EmployeeSelect
+                    employees={employees}
                     value={agendaForm.presenterEmployeeId}
-                    onChange={(event) =>
+                    placeholder="Select presenter"
+                    onChange={(value) =>
                       setAgendaForm((current) => ({
                         ...current,
-                        presenterEmployeeId: event.target.value,
+                        presenterEmployeeId: value,
                       }))
                     }
                     required
@@ -740,27 +790,34 @@ function BoardProposalDetailsContent() {
                 </div>
                 <div>
                   <label className="label">Responsible board member</label>
-                  <input
-                    className="field"
+                  <EmployeeSelect
+                    employees={boardMemberEmployees}
                     value={agendaForm.responsibleBoardMemberEmployeeId}
-                    onChange={(event) =>
+                    placeholder="Select board member"
+                    onChange={(value) =>
                       setAgendaForm((current) => ({
                         ...current,
-                        responsibleBoardMemberEmployeeId: event.target.value,
+                        responsibleBoardMemberEmployeeId: value,
                       }))
                     }
                     required
                   />
+                  {boardMemberEmployees.length === 0 && (
+                    <p className="mt-2 text-xs text-amber-100/80">
+                      No users have the BoardProposalBoardMember role.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="label">Initiator employee</label>
-                  <input
-                    className="field"
+                  <EmployeeSelect
+                    employees={employees}
                     value={agendaForm.initiatorEmployeeId}
-                    onChange={(event) =>
+                    placeholder="Select initiator"
+                    onChange={(value) =>
                       setAgendaForm((current) => ({
                         ...current,
-                        initiatorEmployeeId: event.target.value,
+                        initiatorEmployeeId: value,
                       }))
                     }
                     required
@@ -922,14 +979,14 @@ function BoardProposalDetailsContent() {
               <h2 className="display text-lg font-semibold">Votes</h2>
               {canCaptureVotes(details?.status) ? (
                 <form onSubmit={addVote} className="mt-4 space-y-3">
-                  <input
-                    className="field"
-                    placeholder="Board member employee id"
+                  <EmployeeSelect
+                    employees={boardMemberEmployees}
                     value={voteForm.boardMemberEmployeeId}
-                    onChange={(event) =>
+                    placeholder="Select board member"
+                    onChange={(value) =>
                       setVoteForm((current) => ({
                         ...current,
-                        boardMemberEmployeeId: event.target.value,
+                        boardMemberEmployeeId: value,
                       }))
                     }
                     required
@@ -984,7 +1041,11 @@ function BoardProposalDetailsContent() {
                       {getDropDownLabel(voteTypeOptions, vote.voteType)}
                     </p>
                     <p className="text-xs text-white/45">
-                      {vote.boardMemberEmployeeId}
+                      {getEmployeeDisplayName(
+                        vote.boardMemberEmployeeId,
+                        boardMemberEmployees,
+                        employees,
+                      )}
                     </p>
                     {vote.notes && (
                       <p className="mt-1 text-white/55">{vote.notes}</p>
@@ -1107,14 +1168,14 @@ function BoardProposalDetailsContent() {
                   }
                   required
                 />
-                <input
-                  className="field"
-                  placeholder="Responsible employee id"
+                <EmployeeSelect
+                  employees={taskOwnerEmployees.length > 0 ? taskOwnerEmployees : employees}
                   value={taskForm.responsibleEmployeeId}
-                  onChange={(event) =>
+                  placeholder="Select responsible employee"
+                  onChange={(value) =>
                     setTaskForm((current) => ({
                       ...current,
-                      responsibleEmployeeId: event.target.value,
+                      responsibleEmployeeId: value,
                     }))
                   }
                   required
@@ -1194,7 +1255,12 @@ function BoardProposalDetailsContent() {
                   <span>
                     <span className="block font-semibold">{task.title}</span>
                     <span className="text-xs text-white/45">
-                      {task.responsibleEmployeeId} - Due{" "}
+                      {getEmployeeDisplayName(
+                        task.responsibleEmployeeId,
+                        taskOwnerEmployees,
+                        employees,
+                      )}{" "}
+                      - Due{" "}
                       {new Date(task.dueDate).toLocaleDateString()}
                     </span>
                     {task.extendedDueDate && (
@@ -1357,7 +1423,7 @@ function BoardProposalDetailsContent() {
               />
               <InfoRow
                 label="Secretary"
-                value={details?.secretaryEmployeeId ?? "-"}
+                value={getEmployeeDisplayName(details?.secretaryEmployeeId, employees)}
               />
               <InfoRow
                 label="Tasks"
@@ -1369,6 +1435,49 @@ function BoardProposalDetailsContent() {
       </div>
     </div>
   );
+}
+
+function EmployeeSelect({
+  employees,
+  value,
+  placeholder,
+  onChange,
+  required,
+}: {
+  employees: EmployeeLookupItem[];
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}) {
+  return (
+    <select
+      className="field"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      required={required}
+    >
+      <option value="" disabled>
+        {placeholder}
+      </option>
+      {employees.map((employee) => (
+        <option key={employee.id} value={employee.id}>
+          {employeeLabel(employee)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function getEmployeeDisplayName(
+  employeeId: string | null | undefined,
+  primary: EmployeeLookupItem[],
+  fallback: EmployeeLookupItem[] = [],
+) {
+  if (!employeeId) return "-";
+
+  const employee = [...primary, ...fallback].find((item) => item.id === employeeId);
+  return employee ? employeeLabel(employee) : employeeId;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {

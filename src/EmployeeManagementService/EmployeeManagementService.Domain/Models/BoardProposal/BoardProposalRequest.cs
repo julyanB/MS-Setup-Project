@@ -1,4 +1,5 @@
-﻿using EmployeeManagementService.Domain.Common;
+﻿using System.ComponentModel;
+using EmployeeManagementService.Domain.Common;
 using EmployeeManagementService.Domain.Enums.BoardProposal;
 
 namespace EmployeeManagementService.Domain.Models.BoardProposal;
@@ -13,6 +14,7 @@ public sealed class BoardProposalRequest : RequestBase<int, BoardProposalStatus>
 
     public string MeetingFormat { get; set; } = null!;
 
+    [Description("UserId")]
     public string SecretaryEmployeeId { get; set; } = null!;
 
     public DateTime? SentAt { get; set; }

@@ -4,6 +4,8 @@ public interface IUserPermissions
 {
     Task<UserSearchResult> GetUsers(UserSearchRequest request, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<EmployeeLookupItem>> GetEmployees(EmployeeLookupRequest request, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<string>> GetPermissions(string userId, CancellationToken cancellationToken = default);
 
     Task AddPermission(string userId, string permission, CancellationToken cancellationToken = default);
@@ -35,3 +37,13 @@ public sealed record UserListItem(
     string? UserName,
     int RoleCount,
     int PermissionCount);
+
+public sealed record EmployeeLookupRequest(
+    string? Role = null,
+    string? Search = null,
+    int Limit = 100);
+
+public sealed record EmployeeLookupItem(
+    string Id,
+    string? Email,
+    string? UserName);

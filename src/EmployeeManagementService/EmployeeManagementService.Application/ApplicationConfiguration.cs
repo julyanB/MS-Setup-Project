@@ -22,6 +22,7 @@ using EmployeeManagementService.Application.Features.Attachments.Commands.Deacti
 using EmployeeManagementService.Application.Features.Attachments.Commands.UploadAttachment;
 using EmployeeManagementService.Application.Features.Attachments.Queries.DownloadAttachment;
 using EmployeeManagementService.Application.Services.RequestApprovalAssignment;
+using EmployeeManagementService.Application.Features.Identity.Queries.GetEmployees;
 
 namespace EmployeeManagementService.Application;
 
@@ -50,6 +51,7 @@ public static class ApplicationConfiguration
             .AddTransient<UploadAttachmentRequestHandler>()
             .AddTransient<DownloadAttachmentRequestHandler>()
             .AddTransient<DeactivateAttachmentRequestHandler>()
+            .AddTransient<GetEmployeesRequestHandler>()
             .AddServices()
             .AddMessaging(configuration)
             .AddValidatorsFromAssemblyContaining<ApplicationSettings>();

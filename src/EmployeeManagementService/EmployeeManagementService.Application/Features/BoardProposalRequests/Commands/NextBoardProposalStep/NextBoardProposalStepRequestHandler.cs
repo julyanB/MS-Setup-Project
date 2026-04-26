@@ -108,7 +108,7 @@ public class NextBoardProposalStepRequestHandler
                 Status = requestEntity.Status.ToString(),
                 ModifiedBy = actor,
                 UpdatedAt = DateTimeOffset.UtcNow,
-                ApprovalTargets = ApprovalTargetMessageFactory.FromAssignments(approvalAssignments)
+                ApprovalTargets = ApprovalTargetMessageExtensions.FromAssignments(approvalAssignments)
             },
             cancellationToken);
     }

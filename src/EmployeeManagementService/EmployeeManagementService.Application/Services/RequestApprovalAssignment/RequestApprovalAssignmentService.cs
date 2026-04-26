@@ -14,7 +14,8 @@ public class RequestApprovalAssignmentService : IRequestApprovalAssignmentServic
 {
     private readonly IEmployeeManagementServiceDbContext _dbContext;
 
-    public RequestApprovalAssignmentService(IEmployeeManagementServiceDbContext dbContext)
+    public RequestApprovalAssignmentService(
+        IEmployeeManagementServiceDbContext dbContext)
     {
         _dbContext = dbContext;
     }
