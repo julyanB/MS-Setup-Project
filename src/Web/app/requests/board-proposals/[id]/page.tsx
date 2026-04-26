@@ -153,6 +153,15 @@ function canManageAgenda(status: BoardProposalStatus | undefined) {
   return status === "Draft" || status === "AgendaPreparation";
 }
 
+function canReorderAgenda(status: BoardProposalStatus | undefined) {
+  return (
+    status === "Draft" ||
+    status === "AgendaPreparation" ||
+    status === "SecretaryReview" ||
+    status === "ChairpersonReview"
+  );
+}
+
 function canManageMaterials(status: BoardProposalStatus | undefined) {
   return (
     status === "Draft" ||
@@ -200,6 +209,9 @@ function BoardProposalDetailsContent() {
   const [working, setWorking] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [draggedAgendaItemId, setDraggedAgendaItemId] = useState<number | null>(
+    null,
+  );
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
   const [categoryOptions, setCategoryOptions] = useState<DropDownOption[]>([]);
   const [voteTypeOptions, setVoteTypeOptions] = useState<DropDownOption[]>([]);
@@ -558,6 +570,36 @@ function BoardProposalDetailsContent() {
     });
   }
 
+  async function reorderAgendaItem(targetAgendaItemId: number) {
+    if (
+      draggedAgendaItemId === null ||
+      draggedAgendaItemId === targetAgendaItemId
+    ) {
+      setDraggedAgendaItemId(null);
+      return;
+    }
+
+    const currentIndex = agendaItems.findIndex(
+      (item) => item.id === draggedAgendaItemId,
+    );
+    const targetIndex = agendaItems.findIndex(
+      (item) => item.id === targetAgendaItemId,
+    );
+    if (currentIndex < 0 || targetIndex < 0) return;
+
+    const reordered = [...agendaItems];
+    const [moved] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+    setDraggedAgendaItemId(null);
+
+    await run("Reorder agenda items", () =>
+      boardProposalApi.reorderAgendaItems(
+        id,
+        reordered.map((item, index) => ({ id: item.id, order: index + 1 })),
+      ),
+    );
+  }
+
   async function reorderTask(targetTaskId: number) {
     if (!selectedAgendaItem || draggedTaskId === null || draggedTaskId === targetTaskId) {
       setDraggedTaskId(null);
@@ -690,6 +732,9 @@ function BoardProposalDetailsContent() {
               <h2 className="display text-lg font-semibold">Agenda items</h2>
               <span className="text-sm text-white/45">
                 {agendaItems.length} item{agendaItems.length === 1 ? "" : "s"}
+                {canReorderAgenda(details?.status) && agendaItems.length > 1
+                  ? " - drag to reorder"
+                  : ""}
               </span>
             </div>
 
@@ -699,19 +744,37 @@ function BoardProposalDetailsContent() {
                 const isSelected = selectedAgendaItem?.id === item.id;
 
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
                     onClick={() => setSelectedAgendaItemId(item.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedAgendaItemId(item.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    draggable={canReorderAgenda(details?.status)}
+                    onDragStart={() => setDraggedAgendaItemId(item.id)}
+                    onDragEnd={() => setDraggedAgendaItemId(null)}
+                    onDragOver={(event: DragEvent<HTMLDivElement>) =>
+                      canReorderAgenda(details?.status) && event.preventDefault()
+                    }
+                    onDrop={() =>
+                      canReorderAgenda(details?.status) &&
+                      void reorderAgendaItem(item.id)
+                    }
                     className={`rounded-2xl border p-4 text-left transition ${
                       isSelected
                         ? "border-fuchsia-200/60 bg-fuchsia-300/20"
                         : "border-white/10 bg-white/[0.04] hover:bg-white/[0.07]"
-                    }`}
+                    } ${canReorderAgenda(details?.status) ? "cursor-move" : "cursor-pointer"}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-widest text-white/40">
+                          {canReorderAgenda(details?.status) ? ":: " : ""}
                           #{item.order} {getDropDownLabel(categoryOptions, item.category)}
                         </p>
                         <h3 className="mt-2 font-semibold">{item.title}</h3>
@@ -744,7 +807,7 @@ function BoardProposalDetailsContent() {
                         Votes: {item.votes.length} / Tasks: {item.tasks.length}
                       </span>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
 

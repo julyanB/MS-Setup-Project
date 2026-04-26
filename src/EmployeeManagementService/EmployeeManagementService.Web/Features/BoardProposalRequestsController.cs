@@ -4,6 +4,7 @@ using EmployeeManagementService.Application.Features.BoardProposalRequests.Queri
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalAgendaItem;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalTask;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalVote;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.ReorderBoardProposalAgendaItems;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.ReorderBoardProposalTasks;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.SetBoardProposalAgendaItemDecision;
 using EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.UpdateBoardProposalTaskStatus;
@@ -79,6 +80,18 @@ public class BoardProposalRequestsController : ControllerBase
     {
         request.AgendaItemId = agendaItemId;
         return Ok(await requestHandler.Handle(request, cancellationToken));
+    }
+
+    [HttpPut("{id:int}/agenda-items/reorder")]
+    public async Task<IActionResult> ReorderAgendaItems(
+        int id,
+        [FromBody] ReorderBoardProposalAgendaItemsRequest request,
+        [FromServices] ReorderBoardProposalAgendaItemsRequestHandler requestHandler,
+        CancellationToken cancellationToken)
+    {
+        request.BoardProposalRequestId = id;
+        await requestHandler.Handle(request, cancellationToken);
+        return NoContent();
     }
 
     [HttpPut("agenda-items/{agendaItemId:int}/tasks/reorder")]

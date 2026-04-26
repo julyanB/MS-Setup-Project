@@ -177,6 +177,15 @@ export const boardProposalApi = {
       { agendaItemId, items },
     ),
 
+  reorderAgendaItems: (
+    id: number,
+    items: { id: number; order: number }[],
+  ) =>
+    api.put<void>(`/board-proposal-requests/${id}/agenda-items/reorder`, {
+      id,
+      items,
+    }),
+
   updateTaskStatus: (
     taskId: number,
     body: {
