@@ -11,7 +11,7 @@ import {
 } from "@/lib/requestMetaData";
 
 const mostUsedRequests = [
-  { title: "Board proposal request", code: "MB", href: "/requests?type=board" },
+  { title: "Board proposal request", code: "MB", href: "/requests?tab=all" },
 ];
 
 type QuickAction = {
@@ -21,14 +21,6 @@ type QuickAction = {
 
 const quickActions: QuickAction[] = [
   { label: "Create proposal", href: "/requests/board-proposals/new" },
-  { label: "Make a payment" },
-  { label: "Open a deposit" },
-  { label: "Create account" },
-  { label: "Register new customer" },
-  { label: "Make cash deposit" },
-  { label: "Exchange currency" },
-  { label: "Request a debit card" },
-  { label: "Conflict of interests" },
 ];
 
 export default function DashboardPage() {
@@ -116,7 +108,7 @@ function DashboardContent() {
                 Most used requests
               </h2>
               <Link
-                href="/requests"
+                href="/requests?tab=all"
                 className="text-sm font-semibold text-white/65 underline decoration-white/25 underline-offset-4 hover:text-white"
               >
                 View all
@@ -153,7 +145,7 @@ function DashboardContent() {
                     className="gl flex items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-white/[0.14]"
                   >
                     {action.label}
-                    <span className="text-white/35">›</span>
+                    <span className="text-white/35">&gt;</span>
                   </Link>
                 ) : (
                   <button
@@ -162,7 +154,7 @@ function DashboardContent() {
                     className="gl flex items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-white/[0.14]"
                   >
                     {action.label}
-                    <span className="text-white/35">›</span>
+                    <span className="text-white/35">&gt;</span>
                   </button>
                 ),
               )}

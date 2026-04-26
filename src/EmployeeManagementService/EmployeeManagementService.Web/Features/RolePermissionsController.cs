@@ -15,6 +15,19 @@ public class RolePermissionsController : ControllerBase
         _rolePermissions = rolePermissions;
     }
 
+    [HttpGet("/admin/permissions")]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetAllPermissions(CancellationToken cancellationToken)
+        => Ok(await _rolePermissions.GetAllPermissions(cancellationToken));
+
+    [HttpPost("/admin/permissions")]
+    public async Task<IActionResult> CreatePermission(
+        [FromBody] CreatePermissionRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _rolePermissions.CreatePermission(request.Name, cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<string>>> GetRoles(CancellationToken cancellationToken)
         => Ok(await _rolePermissions.GetRoles(cancellationToken));
@@ -55,6 +68,8 @@ public class RolePermissionsController : ControllerBase
     }
 
     public record CreateRoleRequest(string Name);
+
+    public record CreatePermissionRequest(string Name);
 
     public record AddPermissionRequest(string Permission);
 }

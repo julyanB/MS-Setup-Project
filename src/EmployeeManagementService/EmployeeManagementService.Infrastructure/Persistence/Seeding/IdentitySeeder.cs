@@ -48,6 +48,7 @@ public static class IdentitySeeder
     {
         var seededPermissions = new[]
         {
+            Permission(Permissions.RolesManage, "Manage users, roles, and permissions"),
             Permission(Permissions.BoardProposal_Read, "Read board proposal requests and materials"),
             Permission(Permissions.BoardProposal_CreateMeeting, "Create board proposal meetings"),
             Permission(Permissions.BoardProposal_AddAgendaItems, "Add agenda items to board proposal requests"),
@@ -89,7 +90,7 @@ public static class IdentitySeeder
     {
         var rolePermissions = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Admin"] = [PermissionClaims.RolesManage, .. Permissions.All],
+            ["Admin"] = Permissions.All,
             [Roles.BoardProposal_SecretaryAdmin] = Permissions.All,
             [Roles.BoardProposal_BoardMember] =
             [

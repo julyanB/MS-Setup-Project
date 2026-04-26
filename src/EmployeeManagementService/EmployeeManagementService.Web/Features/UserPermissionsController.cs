@@ -15,6 +15,12 @@ public class UserPermissionsController : ControllerBase
         _userPermissions = userPermissions;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<UserSearchResult>> GetUsers(
+        [FromQuery] UserSearchRequest request,
+        CancellationToken cancellationToken)
+        => Ok(await _userPermissions.GetUsers(request, cancellationToken));
+
     [HttpGet("{userId}/permissions")]
     public async Task<ActionResult<IReadOnlyList<string>>> GetPermissions(
         string userId,

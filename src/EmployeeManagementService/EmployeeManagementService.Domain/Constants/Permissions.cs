@@ -2,6 +2,9 @@
 
 public class Permissions
 {
+    // Administration
+    public const string RolesManage = "roles.manage";
+
     //BoardProposal
     public const string BoardProposal_Read = "board-proposals.read";
     public const string BoardProposal_CreateMeeting = "board-proposals.meetings.create";

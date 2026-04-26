@@ -2,6 +2,10 @@ namespace EmployeeManagementService.Application.Features.Identity;
 
 public interface IRolePermissions
 {
+    Task<IReadOnlyList<string>> GetAllPermissions(CancellationToken cancellationToken = default);
+
+    Task CreatePermission(string permission, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<string>> GetPermissions(string roleName, CancellationToken cancellationToken = default);
 
     Task AddPermission(string roleName, string permission, CancellationToken cancellationToken = default);

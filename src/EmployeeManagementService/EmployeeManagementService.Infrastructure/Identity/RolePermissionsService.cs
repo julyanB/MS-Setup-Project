@@ -20,6 +20,20 @@ internal class RolePermissionsService : IRolePermissions
         _db = db;
     }
 
+    public async Task<IReadOnlyList<string>> GetAllPermissions(CancellationToken cancellationToken = default)
+    {
+        return await _db.Permissions
+            .Select(p => p.Name)
+            .OrderBy(n => n)
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task CreatePermission(string permission, CancellationToken cancellationToken = default)
+    {
+        ValidatePermission(permission);
+        await GetOrCreatePermission(permission, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<string>> GetPermissions(string roleName, CancellationToken cancellationToken = default)
     {
         var role = await GetRoleOrThrow(roleName);

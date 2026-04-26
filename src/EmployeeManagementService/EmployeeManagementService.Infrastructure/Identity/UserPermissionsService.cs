@@ -24,6 +24,55 @@ internal class UserPermissionsService : IUserPermissions
         _db = db;
     }
 
+    public async Task<UserSearchResult> GetUsers(UserSearchRequest request, CancellationToken cancellationToken = default)
+    {
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var search = request.Search?.Trim();
+
+        var query = _userManager.Users.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(user =>
+                (user.Email != null && user.Email.Contains(search)) ||
+                (user.UserName != null && user.UserName.Contains(search)) ||
+                user.Id.Contains(search));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var users = await query
+            .OrderBy(u => u.Email ?? u.UserName ?? u.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToArrayAsync(cancellationToken);
+
+        var userIds = users.Select(u => u.Id).ToArray();
+
+        var roleCounts = await _db.UserRoles
+            .Where(userRole => userIds.Contains(userRole.UserId))
+            .GroupBy(userRole => userRole.UserId)
+            .Select(grouped => new { UserId = grouped.Key, Count = grouped.Count() })
+            .ToDictionaryAsync(x => x.UserId, x => x.Count, cancellationToken);
+
+        var permissionCounts = await _db.UserPermissions
+            .Where(up => userIds.Contains(up.UserId))
+            .GroupBy(up => up.UserId)
+            .Select(grouped => new { UserId = grouped.Key, Count = grouped.Count() })
+            .ToDictionaryAsync(x => x.UserId, x => x.Count, cancellationToken);
+
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+        var items = users
+            .Select(user => new UserListItem(
+                user.Id,
+                user.Email,
+                user.UserName,
+                roleCounts.GetValueOrDefault(user.Id),
+                permissionCounts.GetValueOrDefault(user.Id)))
+            .ToArray();
+
+        return new UserSearchResult(items, page, pageSize, totalCount, totalPages);
+    }
+
     public async Task<IReadOnlyList<string>> GetPermissions(string userId, CancellationToken cancellationToken = default)
     {
         await GetUserOrThrow(userId); // validate user exists

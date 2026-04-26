@@ -6,7 +6,7 @@ import { useUser } from "@/contexts/UserContext";
 import { DigiLogo } from "@/components/DigiLogo";
 
 export function SiteHeader() {
-  const { user, status, logout } = useUser();
+  const { user, status, logout, hasPermission } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
 
   const displayName = user?.email?.split("@")[0] ?? "Digi user";
@@ -26,6 +26,14 @@ export function SiteHeader() {
         <nav className="flex items-center gap-3 text-sm">
           {status === "authenticated" ? (
             <div className="flex items-center gap-3">
+              {hasPermission("roles.manage") && (
+                <Link
+                  href="/admin"
+                  className="rounded-lg px-3 py-1.5 text-white/75 transition hover:text-white"
+                >
+                  Admin
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => setProfileOpen((open) => !open)}
