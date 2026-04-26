@@ -111,18 +111,6 @@ export function SiteHeader() {
                 </p>
               )}
             </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {["Notifications", "Self Service", "ESG"].map((tab) => (
-                <button key={tab} type="button" className="btn-ghost px-3">
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-6 text-center text-sm font-semibold text-white/55">
-              Nothing to see here...
-            </p>
           </aside>
         </div>
       )}
