@@ -11,7 +11,7 @@ public class AddBoardProposalAgendaItemRequestValidator : AbstractValidator<AddB
         RuleFor(x => x.InitiatorEmployeeId).NotEmpty().MaximumLength(450);
         RuleFor(x => x.ResponsibleBoardMemberEmployeeId).NotEmpty().MaximumLength(450);
         RuleFor(x => x.PresenterEmployeeId).NotEmpty().MaximumLength(450);
-        RuleFor(x => x.Category).NotEmpty().MaximumLength(64);
+        RuleFor(x => x.Category).IsInEnum();
         RuleFor(x => x.Description).MaximumLength(1500);
     }
 }

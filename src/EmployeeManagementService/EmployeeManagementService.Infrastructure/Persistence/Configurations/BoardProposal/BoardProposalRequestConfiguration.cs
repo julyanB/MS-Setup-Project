@@ -25,10 +25,12 @@ public class BoardProposalRequestConfiguration : IEntityTypeConfiguration<BoardP
 
         builder.Property(x => x.MeetingType)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(32);
 
         builder.Property(x => x.MeetingFormat)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(32);
 
         builder.Property(x => x.SecretaryEmployeeId)

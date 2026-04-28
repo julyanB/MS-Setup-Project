@@ -10,9 +10,9 @@ public class BoardProposalRequestDetails
 
     public DateTime MeetingDate { get; set; }
 
-    public string MeetingType { get; set; } = null!;
+    public BoardProposalMeetingType MeetingType { get; set; }
 
-    public string MeetingFormat { get; set; } = null!;
+    public BoardProposalMeetingFormat MeetingFormat { get; set; }
 
     public string SecretaryEmployeeId { get; set; } = null!;
 
@@ -44,7 +44,7 @@ public class BoardProposalAgendaItemDetails
 
     public string PresenterEmployeeId { get; set; } = null!;
 
-    public string Category { get; set; } = null!;
+    public BoardProposalAgendaCategory Category { get; set; }
 
     public string? Description { get; set; }
 
@@ -54,7 +54,7 @@ public class BoardProposalAgendaItemDetails
 
     public string? DecisionText { get; set; }
 
-    public string? FinalVote { get; set; }
+    public BoardProposalFinalVote? FinalVote { get; set; }
 
     public string? Notes { get; set; }
 
@@ -69,7 +69,7 @@ public class BoardProposalVoteDetails
 
     public string BoardMemberEmployeeId { get; set; } = null!;
 
-    public string VoteType { get; set; } = null!;
+    public BoardProposalVoteType VoteType { get; set; }
 
     public string? Notes { get; set; }
 }

@@ -33,6 +33,7 @@ public class BoardProposalAgendaItemConfiguration : IEntityTypeConfiguration<Boa
 
         builder.Property(x => x.Category)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(64);
 
         builder.Property(x => x.Description)
@@ -43,7 +44,8 @@ public class BoardProposalAgendaItemConfiguration : IEntityTypeConfiguration<Boa
             .HasMaxLength(64);
 
         builder.Property(x => x.FinalVote)
-            .HasMaxLength(512);
+            .HasConversion<string>()
+            .HasMaxLength(64);
 
         builder.Property(x => x.CreatedAt)
             .IsRequired();

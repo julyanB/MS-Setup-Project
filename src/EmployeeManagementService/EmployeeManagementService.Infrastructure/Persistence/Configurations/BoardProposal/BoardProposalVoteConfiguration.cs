@@ -21,6 +21,7 @@ public class BoardProposalVoteConfiguration : IEntityTypeConfiguration<BoardProp
 
         builder.Property(x => x.VoteType)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(64);
 
         builder.Property(x => x.CreatedAt)

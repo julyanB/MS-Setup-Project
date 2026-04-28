@@ -20,6 +20,8 @@ import {
   BoardProposalRequestDetails,
   BoardProposalStatus,
   BoardProposalTaskStatus,
+  BoardProposalVoteDetails,
+  BoardProposalVoteType,
   EmployeeRequestAction,
   boardProposalApi,
 } from "@/lib/boardProposals";
@@ -186,6 +188,36 @@ function canUpdateTaskStatus(status: BoardProposalStatus | undefined) {
   return status === "DecisionsAndTasks" || status === "DeadlineMonitoring";
 }
 
+function calculateFinalVote(votes: BoardProposalVoteDetails[] | undefined) {
+  let positive = 0;
+  let negative = 0;
+
+  for (const vote of votes ?? []) {
+    if (
+      vote.voteType === "Positive" ||
+      vote.voteType === "PositiveWithCondition" ||
+      vote.voteType === "PositiveWithRecommendation"
+    ) {
+      positive += 1;
+    } else if (
+      vote.voteType === "Negative" ||
+      vote.voteType === "NegativeWithComments"
+    ) {
+      negative += 1;
+    }
+  }
+
+  if (positive === 0 && negative === 0) {
+    return "NoVotes";
+  }
+
+  if (positive === negative) {
+    return "Tie";
+  }
+
+  return positive > negative ? "Positive" : "Negative";
+}
+
 export default function BoardProposalDetailsPage() {
   return (
     <ProtectedRoute>
@@ -239,7 +271,11 @@ function BoardProposalDetailsContent() {
     category: "Business",
     description: "",
   });
-  const [voteForm, setVoteForm] = useState({
+  const [voteForm, setVoteForm] = useState<{
+    boardMemberEmployeeId: string;
+    voteType: BoardProposalVoteType;
+    notes: string;
+  }>({
     boardMemberEmployeeId: "",
     voteType: "Positive",
     notes: "",
@@ -247,12 +283,10 @@ function BoardProposalDetailsContent() {
   const [decisionForm, setDecisionForm] = useState<{
     decisionStatus: BoardProposalDecisionStatus;
     decisionText: string;
-    finalVote: string;
     notes: string;
   }>({
     decisionStatus: "Approved",
     decisionText: "",
-    finalVote: "",
     notes: "",
   });
   const [taskForm, setTaskForm] = useState<{
@@ -394,7 +428,9 @@ function BoardProposalDetailsContent() {
       }));
       setVoteForm((current) => ({
         ...current,
-        voteType: current.voteType || voteTypes[0]?.code || "Positive",
+        voteType:
+          current.voteType ||
+          ((voteTypes[0]?.code ?? "Positive") as BoardProposalVoteType),
       }));
       setDecisionForm((current) => ({
         ...current,
@@ -429,7 +465,6 @@ function BoardProposalDetailsContent() {
     setDecisionForm({
       decisionStatus: selectedAgendaItem.decisionStatus ?? "Approved",
       decisionText: selectedAgendaItem.decisionText ?? "",
-      finalVote: selectedAgendaItem.finalVote ?? "",
       notes: selectedAgendaItem.notes ?? "",
     });
   }, [selectedAgendaItem?.id]);
@@ -545,7 +580,6 @@ function BoardProposalDetailsContent() {
       boardProposalApi.setDecision(selectedAgendaItem.id, {
         decisionStatus: decisionForm.decisionStatus,
         decisionText: decisionForm.decisionText,
-        finalVote: decisionForm.finalVote || undefined,
         notes: decisionForm.notes || undefined,
       }),
     );
@@ -1060,7 +1094,7 @@ function BoardProposalDetailsContent() {
                     onChange={(event) =>
                       setVoteForm((current) => ({
                         ...current,
-                        voteType: event.target.value,
+                        voteType: event.target.value as BoardProposalVoteType,
                       }))
                     }
                   >
@@ -1154,17 +1188,12 @@ function BoardProposalDetailsContent() {
                     }
                     required
                   />
-                  <input
-                    className="field"
-                    placeholder="Final vote summary"
-                    value={decisionForm.finalVote}
-                    onChange={(event) =>
-                      setDecisionForm((current) => ({
-                        ...current,
-                        finalVote: event.target.value,
-                      }))
-                    }
-                  />
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-sm text-white/65">
+                    Calculated final vote:{" "}
+                    <span className="font-semibold text-white">
+                      {calculateFinalVote(selectedAgendaItem?.votes)}
+                    </span>
+                  </div>
                   <textarea
                     className="field min-h-20 resize-y"
                     placeholder="Decision notes"
@@ -1201,11 +1230,11 @@ function BoardProposalDetailsContent() {
                   <p className="mt-1 text-white/65">
                     {selectedAgendaItem.decisionText}
                   </p>
-                  {selectedAgendaItem.finalVote && (
-                    <p className="mt-2 text-xs text-white/45">
-                      Final vote: {selectedAgendaItem.finalVote}
-                    </p>
-                  )}
+                  <p className="mt-2 text-xs text-white/45">
+                    Final vote:{" "}
+                    {selectedAgendaItem.finalVote ??
+                      calculateFinalVote(selectedAgendaItem.votes)}
+                  </p>
                 </div>
               ) : (
                 <p className="mt-4 text-sm text-white/45">

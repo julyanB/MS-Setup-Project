@@ -10,7 +10,5 @@ public class SetBoardProposalAgendaItemDecisionRequest
 
     public string DecisionText { get; set; } = null!;
 
-    public string? FinalVote { get; set; }
-
     public string? Notes { get; set; }
 }

@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using EmployeeManagementService.Domain.Common;
+using EmployeeManagementService.Domain.Enums.BoardProposal;
 
 namespace EmployeeManagementService.Domain.Models.BoardProposal;
 
@@ -12,7 +13,7 @@ public sealed class BoardProposalVote : Auditable<int>
     [Description("UserId")]
     public string BoardMemberEmployeeId { get; set; } = null!;
 
-    public string VoteType { get; set; } = null!;
+    public BoardProposalVoteType VoteType { get; set; }
 
     public string? Notes { get; set; }
 }

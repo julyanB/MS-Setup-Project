@@ -10,9 +10,9 @@ public sealed class BoardProposalRequest : RequestBase<int, BoardProposalStatus>
 
     public DateTime MeetingDate { get; set; }
 
-    public string MeetingType { get; set; } = null!;
+    public BoardProposalMeetingType MeetingType { get; set; }
 
-    public string MeetingFormat { get; set; } = null!;
+    public BoardProposalMeetingFormat MeetingFormat { get; set; }
 
     [Description("UserId")]
     public string SecretaryEmployeeId { get; set; } = null!;

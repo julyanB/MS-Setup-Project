@@ -1,3 +1,5 @@
+using EmployeeManagementService.Domain.Enums.BoardProposal;
+
 namespace EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalAgendaItem;
 
 public class AddBoardProposalAgendaItemRequest
@@ -12,7 +14,7 @@ public class AddBoardProposalAgendaItemRequest
 
     public string PresenterEmployeeId { get; set; } = null!;
 
-    public string Category { get; set; } = null!;
+    public BoardProposalAgendaCategory Category { get; set; }
 
     public string? Description { get; set; }
 }

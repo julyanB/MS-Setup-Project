@@ -8,7 +8,7 @@ public sealed class BoardProposalAgendaItem : Auditable<int>
 {
     public string Title { get; set; } = null!;
 
-    public string Category { get; set; } = null!;
+    public BoardProposalAgendaCategory Category { get; set; }
 
     public string? Description { get; set; }
 
@@ -18,7 +18,7 @@ public sealed class BoardProposalAgendaItem : Auditable<int>
 
     public string? DecisionText { get; set; }
 
-    public string? FinalVote { get; set; }
+    public BoardProposalFinalVote? FinalVote { get; set; }
 
     public string? Notes { get; set; }
 

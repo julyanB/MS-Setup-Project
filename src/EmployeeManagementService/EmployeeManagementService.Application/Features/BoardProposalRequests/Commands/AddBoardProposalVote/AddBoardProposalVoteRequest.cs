@@ -1,3 +1,5 @@
+using EmployeeManagementService.Domain.Enums.BoardProposal;
+
 namespace EmployeeManagementService.Application.Features.BoardProposalRequests.Commands.AddBoardProposalVote;
 
 public class AddBoardProposalVoteRequest
@@ -6,7 +8,7 @@ public class AddBoardProposalVoteRequest
 
     public string BoardMemberEmployeeId { get; set; } = null!;
 
-    public string VoteType { get; set; } = null!;
+    public BoardProposalVoteType VoteType { get; set; }
 
     public string? Notes { get; set; }
 }

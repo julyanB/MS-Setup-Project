@@ -1,5 +1,6 @@
 ﻿using EmployeeManagementService.Application.Contracts;
 using EmployeeManagementService.Application.Exceptions;
+using EmployeeManagementService.Application.Features.BoardProposalRequests.Common;
 using EmployeeManagementService.Domain.Models;
 using EmployeeManagementService.Domain.Models.BoardProposal;
 using FluentValidation;
@@ -29,10 +30,11 @@ public class AddBoardProposalVoteRequestHandler
             throw new ModelValidationException(validationResult.Errors);
         }
 
-        var agendaItemExists = await _dbContext.BoardProposalAgendaItems
-            .AnyAsync(x => x.Id == request.AgendaItemId, cancellationToken);
+        var agendaItem = await _dbContext.BoardProposalAgendaItems
+            .Include(x => x.Votes)
+            .FirstOrDefaultAsync(x => x.Id == request.AgendaItemId, cancellationToken);
 
-        if (!agendaItemExists)
+        if (agendaItem is null)
         {
             throw new NotFoundException(nameof(BoardProposalAgendaItem), request.AgendaItemId);
         }
@@ -46,6 +48,13 @@ public class AddBoardProposalVoteRequestHandler
         };
 
         _dbContext.BoardProposalVotes.Add(vote);
+
+        if (agendaItem.DecisionStatus.HasValue)
+        {
+            agendaItem.FinalVote = BoardProposalFinalVoteCalculator.Calculate(
+                agendaItem.Votes.Append(vote));
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return vote.Id;

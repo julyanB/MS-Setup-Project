@@ -10,12 +10,10 @@ public class CreateBoardProposalRequestValidator : AbstractValidator<CreateBoard
             .NotEmpty();
 
         RuleFor(x => x.MeetingType)
-            .NotEmpty()
-            .MaximumLength(32);
+            .IsInEnum();
 
         RuleFor(x => x.MeetingFormat)
-            .NotEmpty()
-            .MaximumLength(32);
+            .IsInEnum();
 
         RuleFor(x => x.SecretaryEmployeeId)
             .NotEmpty()

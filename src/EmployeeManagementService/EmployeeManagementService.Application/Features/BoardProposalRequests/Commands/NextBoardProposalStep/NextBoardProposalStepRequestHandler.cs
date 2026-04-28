@@ -352,7 +352,7 @@ public class NextBoardProposalStepRequestHandler
                     $"{itemName}: presenter is required."));
             }
 
-            if (string.IsNullOrWhiteSpace(agendaItem.Category))
+            if (!Enum.IsDefined(agendaItem.Category))
             {
                 errors.Add(new ValidationFailure(
                     nameof(BoardProposalAgendaItem.Category),
@@ -389,7 +389,7 @@ public class NextBoardProposalStepRequestHandler
             && !string.IsNullOrWhiteSpace(agendaItem.InitiatorEmployeeId)
             && !string.IsNullOrWhiteSpace(agendaItem.ResponsibleBoardMemberEmployeeId)
             && !string.IsNullOrWhiteSpace(agendaItem.PresenterEmployeeId)
-            && !string.IsNullOrWhiteSpace(agendaItem.Category)
+            && Enum.IsDefined(agendaItem.Category)
             && agendaItem.Order > 0
             && HasMaterial(agendaItem, attachments));
     }

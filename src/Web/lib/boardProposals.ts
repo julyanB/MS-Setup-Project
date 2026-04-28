@@ -43,6 +43,14 @@ export type BoardProposalTaskStatus =
   | "Extended"
   | "Other";
 
+export type BoardProposalVoteType =
+  | "Positive"
+  | "PositiveWithCondition"
+  | "PositiveWithRecommendation"
+  | "Negative"
+  | "NegativeWithComments"
+  | "Abstained";
+
 export type BoardProposalAgendaItemDetails = {
   id: number;
   title: string;
@@ -63,7 +71,7 @@ export type BoardProposalAgendaItemDetails = {
 export type BoardProposalVoteDetails = {
   id: number;
   boardMemberEmployeeId: string;
-  voteType: string;
+  voteType: BoardProposalVoteType;
   notes?: string | null;
 };
 
@@ -144,7 +152,6 @@ export const boardProposalApi = {
     body: {
       decisionStatus: BoardProposalDecisionStatus;
       decisionText: string;
-      finalVote?: string;
       notes?: string;
     },
   ) =>
@@ -200,7 +207,7 @@ export const boardProposalApi = {
     agendaItemId: number,
     body: {
       boardMemberEmployeeId: string;
-      voteType: string;
+      voteType: BoardProposalVoteType;
       notes?: string;
     },
   ) =>
