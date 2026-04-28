@@ -7,4 +7,6 @@ public interface IIdentity
     Task<IUser> Register(UserInputModel userInput);
 
     Task<LoginOutputModel> Login(UserInputModel userInput);
+
+    Task<LoginOutputModel> LdapLogin(UserInputModel userInput);
 }

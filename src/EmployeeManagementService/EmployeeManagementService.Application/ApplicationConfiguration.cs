@@ -1,5 +1,6 @@
 ﻿using EmployeeManagementService.Application.Configuration;
 using EmployeeManagementService.Application.Features.Identity.Commands.CreateUser;
+using EmployeeManagementService.Application.Features.Identity.Commands.LdapLoginUser;
 using EmployeeManagementService.Application.Features.Identity.Commands.LoginUser;
 using Confluent.Kafka;
 using DOmniBus.Lite;
@@ -40,6 +41,7 @@ public static class ApplicationConfiguration
                 configuration.GetSection(DOmniBusSettings.SectionName))
             .AddTransient<CreateUserService>()
             .AddTransient<LoginUserService>()
+            .AddTransient<LdapLoginUserService>()
             .AddTransient<CreateBoardProposalRequestHandler>()
             .AddTransient<NextBoardProposalStepRequestHandler>()
             .AddTransient<SearchBoardProposalRequestHandler>()

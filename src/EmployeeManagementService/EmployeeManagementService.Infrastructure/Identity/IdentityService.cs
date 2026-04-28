@@ -12,11 +12,16 @@ internal class IdentityService : IIdentity
 
     private readonly UserManager<User> _userManager;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly ILdapService _ldapService;
 
-    public IdentityService(UserManager<User> userManager, IJwtTokenGenerator jwtTokenGenerator)
+    public IdentityService(
+        UserManager<User> userManager,
+        IJwtTokenGenerator jwtTokenGenerator,
+        ILdapService ldapService)
     {
         _userManager = userManager;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _ldapService = ldapService;
     }
 
     public async Task<IUser> Register(UserInputModel userInput)
@@ -51,5 +56,46 @@ internal class IdentityService : IIdentity
         var token = await _jwtTokenGenerator.GenerateToken(user);
 
         return new LoginOutputModel(token);
+    }
+
+    public async Task<LoginOutputModel> LdapLogin(UserInputModel userInput)
+    {
+        var ldapUser = await _ldapService.AuthenticateAndGetUserAsync(userInput.Email, userInput.Password);
+        if (ldapUser is null)
+        {
+            throw new IdentityException(InvalidLoginErrorMessage);
+        }
+
+        var user = await FindLocalUser(ldapUser, userInput.Email);
+        if (user == null)
+        {
+            throw new IdentityException(InvalidLoginErrorMessage);
+        }
+
+        var token = await _jwtTokenGenerator.GenerateToken(user);
+
+        return new LoginOutputModel(token);
+    }
+
+    private async Task<User?> FindLocalUser(LdapUser ldapUser, string login)
+    {
+        if (!string.IsNullOrWhiteSpace(ldapUser.Email))
+        {
+            var userByLdapEmail = await _userManager.FindByEmailAsync(ldapUser.Email);
+            if (userByLdapEmail is not null)
+            {
+                return userByLdapEmail;
+            }
+        }
+
+        var userByLoginEmail = await _userManager.FindByEmailAsync(login);
+        if (userByLoginEmail is not null)
+        {
+            return userByLoginEmail;
+        }
+
+        return !string.IsNullOrWhiteSpace(ldapUser.Username)
+            ? await _userManager.FindByNameAsync(ldapUser.Username)
+            : null;
     }
 }

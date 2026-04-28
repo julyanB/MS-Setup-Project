@@ -161,6 +161,7 @@ public static class InfrastructureConfiguration
             });
 
         services.AddTransient<IIdentity, IdentityService>();
+        services.AddScoped<ILdapService, LdapService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGeneratorService>();
         services.AddScoped<IRolePermissions, RolePermissionsService>();
         services.AddScoped<IUserPermissions, UserPermissionsService>();
@@ -291,6 +292,7 @@ public static class InfrastructureConfiguration
     {
         services
             .Configure<ConcurrencyConfiguration>(configuration.GetSection(nameof(ConcurrencyConfiguration)))
+            .Configure<LdapOptions>(configuration.GetSection(LdapOptions.SectionName))
             .Configure<RedisSettings>(configuration.GetSection(RedisSettings.SectionName))
             .Configure<HangfireSettings>(configuration.GetSection(HangfireSettings.SectionName));
 
