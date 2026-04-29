@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeeManagementService.Infrastructure.Migrations
 {
     [DbContext(typeof(EmployeeManagementServiceDbContext))]
-    [Migration("20260424113730_AddAttachmentsAndBoardProposalRequestTables")]
-    partial class AddAttachmentsAndBoardProposalRequestTables
+    [Migration("20260429171350_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,76 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("EmployeeManagementService.Domain.Common.RequestApprovalAssignment<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequestType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)")
+                        .HasDefaultValue("Active");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("TargetValue")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestId");
+
+                    b.HasIndex("RequestType", "RequestId", "Status")
+                        .HasDatabaseName("IX_RequestApprovalAssignments_Request_Status");
+
+                    b.HasIndex("TargetType", "TargetValue", "Status")
+                        .HasDatabaseName("IX_RequestApprovalAssignments_Target_Status");
+
+                    b.ToTable("RequestApprovalAssignments", (string)null);
+                });
 
             modelBuilder.Entity("EmployeeManagementService.Domain.Models.Attachment", b =>
                 {
@@ -119,7 +189,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("Attachments", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -154,8 +224,8 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .HasColumnType("nvarchar(1500)");
 
                     b.Property<string>("FinalVote")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("InitiatorEmployeeId")
                         .IsRequired()
@@ -198,7 +268,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("BoardProposalAgendaItems", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalRequest", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalRequest", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -206,8 +276,8 @@ namespace EmployeeManagementService.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -216,16 +286,16 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime?>("HeldAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("HeldAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("MeetingCode")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
 
-                    b.Property<DateTime>("MeetingDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("MeetingDate")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("MeetingFormat")
                         .IsRequired()
@@ -246,8 +316,8 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime?>("SentAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -271,7 +341,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("BoardProposalRequests", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalTask", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -295,15 +365,18 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DueDate")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime?>("ExtendedDueDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("ExtendedDueDate")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
 
                     b.Property<string>("ResponsibleEmployeeId")
                         .IsRequired()
@@ -327,7 +400,8 @@ namespace EmployeeManagementService.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AgendaItemId");
+                    b.HasIndex("AgendaItemId", "Order")
+                        .HasDatabaseName("IX_BoardProposalTasks_AgendaItem_Order");
 
                     b.HasIndex("ResponsibleEmployeeId", "DueDate")
                         .HasDatabaseName("IX_BoardProposalTasks_Responsible_DueDate");
@@ -335,7 +409,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.ToTable("BoardProposalTasks", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalVote", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalVote", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -453,9 +527,6 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -464,19 +535,10 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsExternal")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -489,17 +551,8 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -515,7 +568,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.ToTable("Users", (string)null);
 
                     b.HasDiscriminator<bool>("IsExternal").HasValue(false);
 
@@ -546,79 +599,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .HasDatabaseName("RoleNameIndex")
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
-                    b.ToTable("AspNetRoles", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
-                {
-                    b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("LoginProvider", "ProviderKey");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserLogins", (string)null);
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
@@ -633,26 +614,7 @@ namespace EmployeeManagementService.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("UserId", "LoginProvider", "Name");
-
-                    b.ToTable("AspNetUserTokens", (string)null);
+                    b.ToTable("UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("EmployeeManagementService.Infrastructure.Identity.UserData.ExternalUser", b =>
@@ -662,9 +624,18 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(true);
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Common.RequestApprovalAssignment<int>", b =>
                 {
-                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposalRequest", "BoardProposalRequest")
+                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalRequest", null)
+                        .WithMany("ApprovalAssignments")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", b =>
+                {
+                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalRequest", "BoardProposalRequest")
                         .WithMany("AgendaItems")
                         .HasForeignKey("BoardProposalRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -673,9 +644,9 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Navigation("BoardProposalRequest");
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalTask", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalTask", b =>
                 {
-                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", "AgendaItem")
+                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", "AgendaItem")
                         .WithMany("Tasks")
                         .HasForeignKey("AgendaItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -684,9 +655,9 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Navigation("AgendaItem");
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalVote", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalVote", b =>
                 {
-                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", "AgendaItem")
+                    b.HasOne("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", "AgendaItem")
                         .WithMany("Votes")
                         .HasForeignKey("AgendaItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -729,33 +700,6 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                     b.Navigation("Permission");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.HasOne("EmployeeManagementService.Infrastructure.Identity.UserData.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
-                {
-                    b.HasOne("EmployeeManagementService.Infrastructure.Identity.UserData.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -771,25 +715,18 @@ namespace EmployeeManagementService.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.HasOne("EmployeeManagementService.Infrastructure.Identity.UserData.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalAgendaItem", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalAgendaItem", b =>
                 {
                     b.Navigation("Tasks");
 
                     b.Navigation("Votes");
                 });
 
-            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposalRequest", b =>
+            modelBuilder.Entity("EmployeeManagementService.Domain.Models.BoardProposal.BoardProposalRequest", b =>
                 {
                     b.Navigation("AgendaItems");
+
+                    b.Navigation("ApprovalAssignments");
                 });
 
             modelBuilder.Entity("EmployeeManagementService.Domain.Models.Permission", b =>

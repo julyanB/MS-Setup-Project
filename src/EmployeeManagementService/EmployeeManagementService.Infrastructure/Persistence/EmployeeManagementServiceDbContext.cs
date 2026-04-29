@@ -6,6 +6,7 @@ using EmployeeManagementService.Domain.Exceptions;
 using EmployeeManagementService.Domain.Models;
 using EmployeeManagementService.Domain.Models.BoardProposal;
 using EmployeeManagementService.Infrastructure.Identity.UserData;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -157,13 +158,6 @@ public class EmployeeManagementServiceDbContext : IdentityDbContext<User>, IEmpl
     public void SetCommandTimeout(TimeSpan timeout)
         => Database.SetCommandTimeout(timeout);
 
-    protected override void OnModelCreating(ModelBuilder builder)
-    {
-        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-        base.OnModelCreating(builder);
-    }
-
     private static async Task<int> ExecuteWithExceptionHandling(Func<Task<int>> func)
     {
         try
@@ -210,5 +204,41 @@ public class EmployeeManagementServiceDbContext : IdentityDbContext<User>, IEmpl
                 => new DatabaseException(ErrorCodes.DuplicateKeyError, sqlException.Message, ex),
             _ => null
         };
+    }
+
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        base.OnModelCreating(builder);
+
+        builder.Ignore<IdentityUserClaim<string>>();
+        builder.Ignore<IdentityRoleClaim<string>>();
+        builder.Ignore<IdentityUserLogin<string>>();
+        builder.Ignore<IdentityUserToken<string>>();
+
+        builder.Entity<User>(b =>
+        {
+            b.ToTable("Users");
+
+            b.Ignore(u => u.EmailConfirmed);
+            b.Ignore(u => u.PhoneNumber);
+            b.Ignore(u => u.PhoneNumberConfirmed);
+            b.Ignore(u => u.TwoFactorEnabled);
+            b.Ignore(u => u.LockoutEnd);
+            b.Ignore(u => u.LockoutEnabled);
+            b.Ignore(u => u.AccessFailedCount);
+        });
+
+        builder.Entity<IdentityRole>(b =>
+        {
+            b.ToTable("Roles");
+        });
+
+        builder.Entity<IdentityUserRole<string>>(b =>
+        {
+            b.ToTable("UserRoles");
+        });
     }
 }
