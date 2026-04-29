@@ -12,7 +12,7 @@ public class AddBoardProposalTaskRequest
 
     public string ResponsibleEmployeeId { get; set; } = null!;
 
-    public DateTime DueDate { get; set; }
+    public DateTimeOffset DueDate { get; set; }
 
     public BoardProposalTaskStatus Status { get; set; } = BoardProposalTaskStatus.ToDo;
 }

@@ -8,7 +8,7 @@ public class BoardProposalRequestDetails
 
     public string MeetingCode { get; set; } = null!;
 
-    public DateTime MeetingDate { get; set; }
+    public DateTimeOffset MeetingDate { get; set; }
 
     public BoardProposalMeetingType MeetingType { get; set; }
 
@@ -84,13 +84,13 @@ public class BoardProposalTaskDetails
 
     public string ResponsibleEmployeeId { get; set; } = null!;
 
-    public DateTime DueDate { get; set; }
+    public DateTimeOffset DueDate { get; set; }
 
     public int Order { get; set; }
 
     public BoardProposalTaskStatus Status { get; set; }
 
-    public DateTime? ExtendedDueDate { get; set; }
+    public DateTimeOffset? ExtendedDueDate { get; set; }
 
     public string? Comment { get; set; }
 }

@@ -8,7 +8,7 @@ public sealed class BoardProposalRequest : RequestBase<int, BoardProposalStatus>
 {
     public string MeetingCode { get; set; } = null!;
 
-    public DateTime MeetingDate { get; set; }
+    public DateTimeOffset MeetingDate { get; set; }
 
     public BoardProposalMeetingType MeetingType { get; set; }
 
@@ -17,11 +17,11 @@ public sealed class BoardProposalRequest : RequestBase<int, BoardProposalStatus>
     [Description("UserId")]
     public string SecretaryEmployeeId { get; set; } = null!;
 
-    public DateTime? SentAt { get; set; }
+    public DateTimeOffset? SentAt { get; set; }
 
-    public DateTime? HeldAt { get; set; }
+    public DateTimeOffset? HeldAt { get; set; }
 
-    public DateTime? ClosedAt { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
 
     public ICollection<BoardProposalAgendaItem> AgendaItems { get; set; } = [];
 }

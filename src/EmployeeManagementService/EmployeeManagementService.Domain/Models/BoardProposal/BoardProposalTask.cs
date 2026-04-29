@@ -17,13 +17,13 @@ public sealed class BoardProposalTask : Auditable<int>
     [Description("UserId")]
     public string ResponsibleEmployeeId { get; set; } = null!;
 
-    public DateTime DueDate { get; set; }
+    public DateTimeOffset DueDate { get; set; }
 
     public int Order { get; set; }
 
     public BoardProposalTaskStatus Status { get; set; }
 
-    public DateTime? ExtendedDueDate { get; set; }
+    public DateTimeOffset? ExtendedDueDate { get; set; }
 
     public string? Comment { get; set; }
 }

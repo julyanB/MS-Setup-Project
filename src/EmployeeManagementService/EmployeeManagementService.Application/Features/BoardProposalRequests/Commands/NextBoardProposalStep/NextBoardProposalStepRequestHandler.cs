@@ -120,7 +120,7 @@ public class NextBoardProposalStepRequestHandler
         bool hasDecisions,
         bool hasExecutableTasks,
         bool canClose,
-        DateTime meetingDate)
+        DateTimeOffset meetingDate)
     {
         stateMachine.ForState(BoardProposalStatus.Draft)
             .OnTrigger(EmployeeRequestAction.Submit, t =>
@@ -156,7 +156,7 @@ public class NextBoardProposalStepRequestHandler
         stateMachine.ForState(BoardProposalStatus.Sent)
             .OnTrigger(EmployeeRequestAction.MarkHeld, t =>
                 t.ChangeState(BoardProposalStatus.Held)
-                    .If(() => meetingDate <= DateTime.UtcNow));
+                    .If(() => meetingDate <= DateTimeOffset.UtcNow));
 
         stateMachine.ForState(BoardProposalStatus.Held)
             .OnTrigger(EmployeeRequestAction.StartDecisionRegistration, t =>
@@ -200,7 +200,7 @@ public class NextBoardProposalStepRequestHandler
         BoardProposalRequest requestEntity,
         BoardProposalStatus status)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         switch (status)
         {
@@ -262,7 +262,7 @@ public class NextBoardProposalStepRequestHandler
                 break;
 
             case (BoardProposalStatus.Sent, EmployeeRequestAction.MarkHeld):
-                if (requestEntity.MeetingDate > DateTime.UtcNow)
+                if (requestEntity.MeetingDate > DateTimeOffset.UtcNow)
                 {
                     errors.Add(new ValidationFailure(
                         nameof(BoardProposalRequest.MeetingDate),

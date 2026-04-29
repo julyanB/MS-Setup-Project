@@ -8,7 +8,7 @@ public class UpdateBoardProposalTaskStatusRequest
 
     public BoardProposalTaskStatus Status { get; set; }
 
-    public DateTime? ExtendedDueDate { get; set; }
+    public DateTimeOffset? ExtendedDueDate { get; set; }
 
     public string? Comment { get; set; }
 }

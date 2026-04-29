@@ -4,7 +4,7 @@ namespace EmployeeManagementService.Application.Features.BoardProposalRequests.C
 
 public class CreateBoardProposalRequest
 {
-    public DateTime MeetingDate { get; set; }
+    public DateTimeOffset MeetingDate { get; set; }
 
     public BoardProposalMeetingType MeetingType { get; set; }
 
