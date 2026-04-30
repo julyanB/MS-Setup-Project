@@ -31,13 +31,12 @@ public static class InfrastructureConfiguration
             .AddDatabase(configuration)
             .AddExternalApis(configuration)
             .AddHangfireJobs(configuration)
+            .AddRedis(configuration)
             .AddTransient<ITransactionScopeService, TransactionScopeService>();
 
         if (configuration.GetValue<bool>("Features:SignalR"))
         {
-            services
-                .AddRedis(configuration)
-                .AddSignalRWithRedis(configuration, environment);
+            services.AddSignalRWithRedis(configuration, environment);
         }
 
         return services;
